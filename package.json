@@ -1,0 +1,22 @@
+{
+  "name": "desktop_front_end",
+  "version": "1.0.0",
+  "description": "Repository for the web front end",
+  "main": "index.js",
+ "scripts": {
+    "build": "echo \"Build script not yet configured\" && exit 0",
+    "test": "echo \"Test script not yet configured\" && exit 0",
+    "lint": "eslint ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OwlBoard/Desktop_Front_End.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/OwlBoard/Desktop_Front_End/issues"
+  },
+  "homepage": "https://github.com/OwlBoard/Desktop_Front_End#readme"
+}
