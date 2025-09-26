@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Stage, Layer, Line, Rect, Circle, Transformer } from "react-konva";
 import Konva from "konva";
+import { KonvaEventObject } from 'konva/lib/Node';
 import { v4 as uuidv4 } from "uuid";
 import type { ToolOption, CommentDef } from "../types/types";
 // Importar los nuevos componentes
@@ -473,7 +474,7 @@ export default function WhiteboardApp(): React.ReactElement {
   };
 
   const clearCanvas = () => {
-    if (!confirm("Borrar todo el contenido de la pizarra?")) return;
+    if (!window.confirm("Borrar todo el contenido de la pizarra?")) return;
     setShapes([]);
     setComments([]);
   };

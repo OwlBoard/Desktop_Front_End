@@ -12,9 +12,11 @@ const toolIcons: Record<ToolOption, string> = {
   brush: "🖌️",
   eraser: "🧼",
   rectangle: "▭",
-  circle: "○",
+  circle: "◯",
   pan: "🖐️",
   comment: "💬",
+  select: "👆", // Añade la propiedad 'select'
+  line: "📏",   // Añade la propiedad 'line'
 };
 
 export default function Toolbar({ tool, setTool }: ToolbarProps): React.ReactElement {
