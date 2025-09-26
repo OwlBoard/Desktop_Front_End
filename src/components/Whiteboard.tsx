@@ -474,7 +474,7 @@ export default function WhiteboardApp(): React.ReactElement {
   };
 
   const clearCanvas = () => {
-    if (!confirm("Borrar todo el contenido de la pizarra?")) return;
+    if (!window.confirm("Borrar todo el contenido de la pizarra?")) return;
     setShapes([]);
     setComments([]);
   };

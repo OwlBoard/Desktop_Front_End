@@ -29,7 +29,14 @@
     "start": "cross-env ESLINT_NO_DEV_ERRORS=true react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "docker:build": "docker build -t owlboard-frontend .",
+    "docker:build:dev": "docker build --target development -t owlboard-frontend:dev .",
+    "docker:build:prod": "docker build --target production -t owlboard-frontend:prod .",
+    "docker:run:dev": "docker run -p 3000:3000 --name owlboard-frontend-dev owlboard-frontend:dev",
+    "docker:run:prod": "docker run -p 3000:80 --name owlboard-frontend-prod owlboard-frontend:prod",
+    "docker:stop": "docker stop owlboard-frontend-dev owlboard-frontend-prod || true",
+    "docker:clean": "docker rm owlboard-frontend-dev owlboard-frontend-prod || true"
   },
   "eslintConfig": {
     "extends": [
