@@ -10,4 +10,10 @@ export interface CommentDef {
   user: {
     name: string;
   };
+  // Campos adicionales para integración con backend
+  backendId?: string;
+  dashboardId?: string;
+  userId?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }

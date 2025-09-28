@@ -11,6 +11,7 @@ import PropertiesPanel from "./PropertiesPanel";
 import CommentsLayer from "./CommentNode";
 import { Html } from 'react-konva-utils';
 import CommentNode from "./CommentNode";
+import { useComments } from "../hooks/useComments";
 
 // Para evitar error "Cannot find namespace 'JSX'"
 import type {} from "react/jsx-runtime";
@@ -66,6 +67,24 @@ export default function WhiteboardApp(): React.ReactElement {
   const transformerRef = useRef<Konva.Transformer | null>(null);
   const shapeNodeRefs = useRef<Record<string, Konva.Node>>({});
 
+  // Configuración temporal para dashboard y usuario
+  // TODO: Obtener estos valores desde el contexto de la aplicación/autenticación
+  // IDs válidos según PydanticObjectId (24 caracteres hex)
+  const DASHBOARD_ID = "6507f1f130ade8d4e9bf7b5a"; // ID temporal del tablero (24 chars)
+  const USER_ID = "6507f1f130ade8d4e9bf7b5b"; // ID temporal del usuario (24 chars)
+
+  // Hook para manejar comentarios con persistencia
+  const {
+    comments,
+    loading: commentsLoading,
+    error: commentsError,
+    createComment,
+    updateComment,
+    deleteComment,
+    updateCommentPosition,
+    loadComments
+  } = useComments({ dashboardId: DASHBOARD_ID, userId: USER_ID });
+
   // UI state
   const [tool, setTool] = useState<ToolOption>("brush");
   const [stageX, setStageX] = useState(0);
@@ -87,20 +106,16 @@ export default function WhiteboardApp(): React.ReactElement {
   const [shapes, setShapes] = useState<ShapeDef[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const [comments, setComments] = useState<CommentDef[]>([]);
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editingCommentText, setEditingCommentText] = useState<string>("");
 
   // drawing state
   const isDrawingRef = useRef(false);
   const drawingRef = useRef<ShapeDef | null>(null);
 
-  const handleCommentDrag = (e: any, id: string) => {
+  const handleCommentDrag = (e: KonvaEventObject<DragEvent>, id: string) => {
     const { x, y } = e.target.position();
-    setComments(prevComments =>
-      prevComments.map(c =>
-        c.id === id ? { ...c, x: Math.round(x), y: Math.round(y) } : c
-      )
-    );
+    updateCommentPosition(id, x, y);
   };
 
   // responsive stage size
@@ -153,15 +168,16 @@ export default function WhiteboardApp(): React.ReactElement {
     if (!pointer) return;
     
     if (tool === "comment") {
-      const newComment: CommentDef = {
-        id: uuidv4(),
-        x: pointer.x,
-        y: pointer.y,
-        text: "Nuevo comentario...",
-        user: { name: "Usuario" } // Placeholder
-      };
-      setComments(prev => [...prev, newComment]);
-      setTool("select"); // Vuelve a la herramienta de selección
+      // Crear comentario usando el hook que se conecta al backend
+      createComment(pointer.x, pointer.y, "Nuevo comentario...")
+        .then((newComment) => {
+          console.log('Comentario creado:', newComment);
+          setTool("select"); // Vuelve a la herramienta de selección
+        })
+        .catch((error) => {
+          console.error('Error al crear comentario:', error);
+          alert('Error al crear comentario: ' + error.message);
+        });
       return; // Termina la función aquí
     }
 
@@ -400,7 +416,7 @@ export default function WhiteboardApp(): React.ReactElement {
     }
   }, [selectedId, shapes]);
 
-  const handleShapeClick = (e: any, id: string) => {
+  const handleShapeClick = (e: KonvaEventObject<MouseEvent>, id: string) => {
     if (tool !== "select") return;
     setSelectedId(id);
     e.cancelBubble = true;
@@ -409,7 +425,7 @@ export default function WhiteboardApp(): React.ReactElement {
   
 
   // helpers
-  const onDragEnd = (e: any, shape: ShapeDef) => {
+  const onDragEnd = (e: KonvaEventObject<DragEvent>, shape: ShapeDef) => {
     const node = e.target;
     const { x, y } = node.position();
     setShapes((prev) =>
@@ -433,7 +449,7 @@ export default function WhiteboardApp(): React.ReactElement {
     );
   };
 
-  const onTransformEnd = (e: any, shape: ShapeDef) => {
+  const onTransformEnd = (e: KonvaEventObject<Event>, shape: ShapeDef) => {
     const node = e.target;
     const scaleX = node.scaleX();
     const scaleY = node.scaleY();
@@ -474,9 +490,13 @@ export default function WhiteboardApp(): React.ReactElement {
   };
 
   const clearCanvas = () => {
-    if (!window.confirm("Borrar todo el contenido de la pizarra?")) return;
+    if (!confirm("Borrar todo el contenido de la pizarra?")) return;
     setShapes([]);
-    setComments([]);
+    // TODO: Implementar eliminación masiva de comentarios del backend
+    // Por ahora solo alertamos al usuario
+    if (comments.length > 0) {
+      alert(`Nota: Los ${comments.length} comentarios no se han eliminado del servidor. Implementar eliminación masiva.`);
+    }
   };
 
   return (
@@ -533,7 +553,7 @@ export default function WhiteboardApp(): React.ReactElement {
                     height={stageSize.height}
                     fill={"transparent"}
                     listening={true}
-                    onMouseDown={(e) => {
+                    onMouseDown={(e: KonvaEventObject<MouseEvent>) => {
                       if (tool === "select") {
                         if (e.target === e.target.getStage()) setSelectedId(null);
                       }
@@ -552,10 +572,10 @@ export default function WhiteboardApp(): React.ReactElement {
                           lineJoin="round"
                           opacity={line.opacity}
                           draggable={tool === "select"}
-                          onClick={(e) => handleShapeClick(e, line.id)}
-                          onTap={(e) => handleShapeClick(e, line.id)}
-                          onDragEnd={(e) => onDragEnd(e, line)}
-                          ref={(node) => { if (node) shapeNodeRefs.current[line.id] = node; }}
+                          onClick={(e: KonvaEventObject<MouseEvent>) => handleShapeClick(e, line.id)}
+                          onTap={(e: KonvaEventObject<MouseEvent>) => handleShapeClick(e, line.id)}
+                          onDragEnd={(e: KonvaEventObject<DragEvent>) => onDragEnd(e, line)}
+                          ref={(node: Konva.Node | null) => { if (node) shapeNodeRefs.current[line.id] = node; }}
                           // @ts-ignore
                           globalCompositeOperation={line.globalCompositeOperation}
                         />
@@ -575,11 +595,11 @@ export default function WhiteboardApp(): React.ReactElement {
                           strokeWidth={rect.strokeWidth}
                           opacity={rect.opacity}
                           draggable={tool === "select"}
-                          onClick={(e) => handleShapeClick(e, rect.id)}
-                          onTap={(e) => handleShapeClick(e, rect.id)}
-                          onDragEnd={(e) => onDragEnd(e, rect)}
-                          onTransformEnd={(e) => onTransformEnd(e, rect)}
-                          ref={(node) => { if (node) shapeNodeRefs.current[rect.id] = node; }}
+                          onClick={(e: KonvaEventObject<MouseEvent>) => handleShapeClick(e, rect.id)}
+                          onTap={(e: KonvaEventObject<MouseEvent>) => handleShapeClick(e, rect.id)}
+                          onDragEnd={(e: KonvaEventObject<DragEvent>) => onDragEnd(e, rect)}
+                          onTransformEnd={(e: KonvaEventObject<Event>) => onTransformEnd(e, rect)}
+                          ref={(node: Konva.Node | null) => { if (node) shapeNodeRefs.current[rect.id] = node; }}
                         />
                       );
                     }
@@ -596,11 +616,11 @@ export default function WhiteboardApp(): React.ReactElement {
                           strokeWidth={circ.strokeWidth}
                           opacity={circ.opacity}
                           draggable={tool === "select"}
-                          onClick={(e) => handleShapeClick(e, circ.id)}
-                          onTap={(e) => handleShapeClick(e, circ.id)}
-                          onDragEnd={(e) => onDragEnd(e, circ)}
-                          onTransformEnd={(e) => onTransformEnd(e, circ)}
-                          ref={(node) => { if (node) shapeNodeRefs.current[circ.id] = node; }}
+                          onClick={(e: KonvaEventObject<MouseEvent>) => handleShapeClick(e, circ.id)}
+                          onTap={(e: KonvaEventObject<MouseEvent>) => handleShapeClick(e, circ.id)}
+                          onDragEnd={(e: KonvaEventObject<DragEvent>) => onDragEnd(e, circ)}
+                          onTransformEnd={(e: KonvaEventObject<Event>) => onTransformEnd(e, circ)}
+                          ref={(node: Konva.Node | null) => { if (node) shapeNodeRefs.current[circ.id] = node; }}
                         />
                       );
                     }
@@ -613,9 +633,12 @@ export default function WhiteboardApp(): React.ReactElement {
                   <CommentNode
                     key={comment.id}
                     comment={comment}
-                    onDblClick={() => setEditingCommentId(comment.id)}
-                    onDragMove={(e) => handleCommentDrag(e, comment.id)} // <-- AÑADIR
-                    onDragEnd={(e) => handleCommentDrag(e, comment.id)}   // <-- AÑADIR
+                    onDblClick={() => {
+                      setEditingCommentId(comment.id);
+                      setEditingCommentText(comment.text);
+                    }}
+                    onDragMove={(e: KonvaEventObject<DragEvent>) => handleCommentDrag(e, comment.id)} // <-- AÑADIR
+                    onDragEnd={(e: KonvaEventObject<DragEvent>) => handleCommentDrag(e, comment.id)}   // <-- AÑADIR
                   />
                 ))}
                 {/* Lógica para mostrar un textarea cuando un comentario se está editando */}
@@ -634,19 +657,31 @@ export default function WhiteboardApp(): React.ReactElement {
                         fontSize: '14px',
                         fontFamily: 'sans-serif'
                       }}
-                      value={comments.find(c => c.id === editingCommentId)!.text}
+                      value={editingCommentText}
                       onChange={(e) => {
-                        const newText = e.currentTarget.value;
-                        setComments(prev =>
-                          prev.map(c => c.id === editingCommentId ? { ...c, text: newText } : c)
-                        );
+                        setEditingCommentText(e.currentTarget.value);
                       }}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && !e.shiftKey) {
-                            setEditingCommentId(null); // Guardar con Enter
+                          // Guardar comentario cuando se presiona Enter
+                          if (editingCommentId && editingCommentText.trim()) {
+                            updateComment(editingCommentId, editingCommentText.trim())
+                              .then(() => {
+                                setEditingCommentId(null);
+                                setEditingCommentText("");
+                              })
+                              .catch((error) => {
+                                console.error('Error al actualizar comentario:', error);
+                                alert('Error al actualizar comentario: ' + error.message);
+                              });
+                          } else {
+                            setEditingCommentId(null);
+                            setEditingCommentText("");
+                          }
                         }
                         if (e.key === 'Escape') {
                             setEditingCommentId(null); // Cancelar con Escape
+                            setEditingCommentText("");
                         }
                       }}
                       autoFocus

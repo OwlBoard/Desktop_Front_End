@@ -1,0 +1,37 @@
+.toolbox {
+  position: absolute;
+  top: 50%;
+  left: 10px;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 6px;
+  border-radius: 12px;
+  background-color: #1f2937; /* dark gray for contrast */
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.toolbox-btn {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px !important;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.toolbox-btn i {
+  font-size: 1.2rem;
+}
+
+.toolbox-btn.active {
+  background-color: #10b981 !important; /* Tailwind emerald/Bootstrap success vibe */
+  color: white !important;
+}
+
+.toolbox-btn:hover {
+  transform: scale(1.05);
+}

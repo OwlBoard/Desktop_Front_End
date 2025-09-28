@@ -1,0 +1,30 @@
+/* src/pages/PaintPage.css */
+.paint-page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.toolbar-col {
+  background-color: #f8f9fa;
+  border-right: 1px solid #ddd;
+  padding: 0.5rem;
+}
+
+.canvas-col {
+  background-color: #ffffff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.stage-wrapper {
+  width: 100%;
+  height: 100%;
+}
+
+.props-col {
+  background-color: #f8f9fa;
+  border-left: 1px solid #ddd;
+  padding: 0.5rem;
+}

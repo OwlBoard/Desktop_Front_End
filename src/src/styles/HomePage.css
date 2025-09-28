@@ -1,0 +1,7 @@
+.homepage-container {
+  background: linear-gradient(45deg, #283048, #859398);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
