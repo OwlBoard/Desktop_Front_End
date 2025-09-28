@@ -8,6 +8,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import MyBoardsPage from './pages/MyBoardsPage';
 import PaintPage from './pages/PaintPage'; // La página de la pizarra que ya tienes
+import UserProfilePage from './pages/UserProfilePage';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/boards" element={<MyBoardsPage />} />
           <Route path="/board/:boardId" element={<PaintPage />} />
+          <Route path="/profile" element={<UserProfilePage />} />
         </Routes>
       </div>
     </Router>
