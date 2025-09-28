@@ -1,0 +1,12 @@
+.navbar {
+  border-bottom: 1px solid #ddd;
+}
+
+.navbar-brand span {
+  color: #004e14 !important;
+}
+
+.nav-link {
+  font-weight: 500;
+  color: #333 !important;
+}
