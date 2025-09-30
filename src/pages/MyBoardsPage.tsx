@@ -12,16 +12,13 @@ const mockBoards = [
 const MyBoardsPage = () => {
   return (
     <>
-      <Nav className="bg-light p-2 mb-4 d-flex justify-content-between align-items-center">
+      <Nav className="bg-light p-2 mb-4 d-flex justify-content-between">
         <Nav.Item>
             <Link to="/" className="navbar-brand">🦉 Owlboard</Link>
         </Nav.Item>
-        <div>
-          <Link to="/profile">
-            <Button variant="outline-primary" className="me-2">Perfil</Button>
-          </Link>
-          <Button variant="outline-danger">Cerrar Sesión</Button>
-        </div>
+        <Nav.Item>
+            <Button variant="outline-danger">Cerrar Sesión</Button>
+        </Nav.Item>
       </Nav>
 
       <Container>
