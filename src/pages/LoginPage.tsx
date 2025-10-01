@@ -25,7 +25,7 @@ const LoginPage = () => {
       console.log('Login successful:', response.message);
       
       // Redirect to dashboard/boards page
-      navigate('/boards');
+      navigate('/board/la');
       
     } catch (err: any) {
       console.error('Login failed:', err);

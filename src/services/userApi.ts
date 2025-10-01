@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 // Base URL for User Service - use environment variable or default to Docker port
-const USER_API_BASE_URL = process.env.REACT_APP_USER_SERVICE_URL || 'http://localhost:5000/users';
+const USER_API_BASE_URL = process.env.REACT_APP_USER_SERVICE_URL || 'http://localhost:8000';
 
 // Configure axios instance
 const userApiClient = axios.create({
@@ -61,7 +61,7 @@ export class UserApiService {
       formData.append('full_name', userData.full_name);
     }
 
-    const response = await userApiClient.post<AuthResponse>('/register', formData);
+    const response = await userApiClient.post<AuthResponse>('/users/register', formData);
     return response.data;
   }
 
@@ -71,7 +71,7 @@ export class UserApiService {
     formData.append('email', credentials.email);
     formData.append('password', credentials.password);
 
-    const response = await userApiClient.post<AuthResponse>('/login', formData);
+    const response = await userApiClient.post<AuthResponse>('/users/login', formData);
     return response.data;
   }
 
