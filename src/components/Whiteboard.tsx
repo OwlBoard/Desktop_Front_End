@@ -12,7 +12,7 @@ import CommentsLayer from "./CommentNode";
 import { Html } from 'react-konva-utils';
 import CommentNode from "./CommentNode";
 import { useComments } from "../hooks/useComments";
-import "../src/styles/CommentEditor.css";
+import "../styles/CommentEditor.css";
 
 // Para evitar error "Cannot find namespace 'JSX'"
 import type {} from "react/jsx-runtime";
@@ -116,7 +116,14 @@ export default function WhiteboardApp(): React.ReactElement {
   const isDrawingRef = useRef(false);
   const drawingRef = useRef<ShapeDef | null>(null);
 
-  const handleCommentDrag = (e: KonvaEventObject<DragEvent>, id: string) => {
+  // Manejar movimiento de comentarios - durante el arrastre
+  const handleCommentDragMove = (e: KonvaEventObject<DragEvent>, id: string) => {
+    const { x, y } = e.target.position();
+    updateCommentPosition(id, x, y);
+  };
+
+  // Manejar final del arrastre de comentarios - persistir en backend
+  const handleCommentDragEnd = (e: KonvaEventObject<DragEvent>, id: string) => {
     const { x, y } = e.target.position();
     updateCommentPosition(id, x, y);
   };
@@ -637,8 +644,8 @@ export default function WhiteboardApp(): React.ReactElement {
                       setEditingCommentId(comment.id);
                       setEditingCommentText(comment.text);
                     }}
-                    onDragMove={(e: KonvaEventObject<DragEvent>) => handleCommentDrag(e, comment.id)} // <-- AÑADIR
-                    onDragEnd={(e: KonvaEventObject<DragEvent>) => handleCommentDrag(e, comment.id)}   // <-- AÑADIR
+                    onDragMove={(e: KonvaEventObject<DragEvent>) => handleCommentDragMove(e, comment.id)}
+                    onDragEnd={(e: KonvaEventObject<DragEvent>) => handleCommentDragEnd(e, comment.id)}
                   />
                 ))}
                 {/* Lógica para mostrar un textarea cuando un comentario se está editando */}
@@ -661,14 +668,15 @@ export default function WhiteboardApp(): React.ReactElement {
                         if (e.key === 'Enter' && !e.shiftKey) {
                           e.preventDefault();
                           // Guardar comentario cuando se presiona Enter
-                          if (editingCommentId && editingCommentText.trim()) {
+                          const trimmedText = editingCommentText.trim();
+                          if (editingCommentId && trimmedText) {
                             // Verificar si es un comentario temporal
                             const comment = comments.find(c => c.id === editingCommentId);
                             const isTemporary = comment && !comment.backendId;
                             
                             if (isTemporary) {
                               // Guardar comentario temporal
-                              saveTemporaryComment(editingCommentId, editingCommentText.trim())
+                              saveTemporaryComment(editingCommentId, trimmedText)
                                 .then(() => {
                                   setEditingCommentId(null);
                                   setEditingCommentText("");
@@ -679,7 +687,7 @@ export default function WhiteboardApp(): React.ReactElement {
                                 });
                             } else {
                               // Actualizar comentario existente
-                              updateComment(editingCommentId, editingCommentText.trim())
+                              updateComment(editingCommentId, trimmedText)
                                 .then(() => {
                                   setEditingCommentId(null);
                                   setEditingCommentText("");
@@ -690,20 +698,18 @@ export default function WhiteboardApp(): React.ReactElement {
                                 });
                             }
                           } else {
-                            // Si el comentario está vacío, cancelarlo
+                            // Si el comentario está vacío, cancelarlo o eliminarlo
                             if (editingCommentId) {
                               const comment = comments.find(c => c.id === editingCommentId);
                               const isTemporary = comment && !comment.backendId;
                               
                               if (isTemporary) {
+                                // Cancelar comentario temporal
                                 cancelTemporaryComment(editingCommentId);
                               } else {
-                                if (confirm('¿Estás seguro de que quieres eliminar este comentario?')) {
-                                  deleteComment(editingCommentId)
-                                    .catch((error) => {
-                                      console.error('Error al eliminar comentario vacío:', error);
-                                    });
-                                }
+                                // Para comentarios existentes, solo cerrar el editor sin eliminar
+                                alert('El comentario no puede estar vacío. Presiona Escape para cancelar.');
+                                return; // No cerrar el editor
                               }
                             }
                             setEditingCommentId(null);

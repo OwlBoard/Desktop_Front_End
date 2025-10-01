@@ -20,7 +20,12 @@ export interface CommentResponse {
 }
 
 export interface UpdateCommentRequest {
-  content: string;
+  content?: string;
+  coordinates?: number[];
+}
+
+export interface UpdateCoordinatesRequest {
+  coordinates: number[];
 }
 
 export class CommentsApiService {
@@ -93,6 +98,24 @@ export class CommentsApiService {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(`Error updating comment: ${response.status} - ${errorData.detail || response.statusText}`);
+    }
+
+    return response.json();
+  }
+
+  // Actualizar las coordenadas de un comentario
+  static async updateCommentCoordinates(commentId: string, coordinates: number[]): Promise<CommentResponse> {
+    const response = await fetch(`${API_BASE_URL}/${commentId}/coordinates`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(coordinates),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`Error updating comment coordinates: ${response.status} - ${errorData.detail || response.statusText}`);
     }
 
     return response.json();

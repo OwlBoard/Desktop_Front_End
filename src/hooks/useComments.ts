@@ -1,5 +1,5 @@
 // src/hooks/useComments.ts
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { CommentDef } from '../types/types';
 import { CommentsApiService, CommentResponse } from '../services/commentsApi';
 
@@ -12,6 +12,9 @@ export const useComments = ({ dashboardId, userId }: UseCommentsProps) => {
   const [comments, setComments] = useState<CommentDef[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Referencia para el debounce de actualización de posición
+  const positionUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Cargar comentarios del tablero
   const loadComments = useCallback(async () => {
@@ -77,6 +80,8 @@ export const useComments = ({ dashboardId, userId }: UseCommentsProps) => {
     } catch (err) {
       console.error('Error saving comment:', err);
       setError(err instanceof Error ? err.message : 'Error saving comment');
+      // Eliminar el comentario temporal si falla el guardado
+      setComments(prev => prev.filter(c => c.id !== tempCommentId));
       throw err;
     }
   }, [dashboardId, userId, comments]);
@@ -139,16 +144,43 @@ export const useComments = ({ dashboardId, userId }: UseCommentsProps) => {
     }
   }, [comments]);
 
-  // Actualizar posición del comentario (para drag & drop)
-  const updateCommentPosition = useCallback((commentId: string, x: number, y: number) => {
+  // Actualizar posición del comentario inmediatamente (para UX fluido)
+  const updateCommentPositionImmediate = useCallback((commentId: string, x: number, y: number) => {
     setComments(prev => prev.map(c => 
       c.id === commentId ? { ...c, x: Math.round(x), y: Math.round(y) } : c
     ));
-    
-    // Opcional: también actualizar en el backend
-    // Por ahora solo actualiza localmente para mejor performance
-    // Se podría implementar un debounce para actualizar en el backend después de parar de arrastrar
   }, []);
+
+  // Actualizar posición del comentario con debounce (para persistencia)
+  const updateCommentPositionPersistent = useCallback((commentId: string, x: number, y: number) => {
+    // Limpiar timeout anterior si existe
+    if (positionUpdateTimeoutRef.current) {
+      clearTimeout(positionUpdateTimeoutRef.current);
+    }
+
+    // Configurar nuevo timeout para actualizar en el backend después de 500ms
+    positionUpdateTimeoutRef.current = setTimeout(async () => {
+      try {
+        const comment = comments.find(c => c.id === commentId);
+        if (comment?.backendId) {
+          await CommentsApiService.updateCommentCoordinates(
+            comment.backendId, 
+            [Math.round(x), Math.round(y)]
+          );
+          console.log('Position updated in backend for comment:', commentId);
+        }
+      } catch (err) {
+        console.error('Error updating comment position in backend:', err);
+        setError(err instanceof Error ? err.message : 'Error updating comment position');
+      }
+    }, 500);
+  }, [comments]);
+
+  // Función combinada que actualiza inmediatamente y programa la persistencia
+  const updateCommentPosition = useCallback((commentId: string, x: number, y: number) => {
+    updateCommentPositionImmediate(commentId, x, y);
+    updateCommentPositionPersistent(commentId, x, y);
+  }, [updateCommentPositionImmediate, updateCommentPositionPersistent]);
 
   // Cargar comentarios al montar el componente
   useEffect(() => {
@@ -156,6 +188,15 @@ export const useComments = ({ dashboardId, userId }: UseCommentsProps) => {
       loadComments();
     }
   }, [dashboardId, userId, loadComments]);
+
+  // Limpiar timeout al desmontar el componente
+  useEffect(() => {
+    return () => {
+      if (positionUpdateTimeoutRef.current) {
+        clearTimeout(positionUpdateTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return {
     comments,

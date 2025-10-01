@@ -1,0 +1,50 @@
+.comment-editor {
+    position: absolute;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    z-index: 1000;
+}
+
+.comment-editor textarea {
+    width: 200px;
+    height: 100px;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    padding: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    resize: vertical;
+    margin-bottom: 8px;
+}
+
+.comment-editor .buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.comment-editor button {
+    padding: 4px 8px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.comment-editor .save-button {
+    background-color: #2563eb;
+    color: white;
+}
+
+.comment-editor .cancel-button {
+    background-color: #e5e7eb;
+    color: #4b5563;
+}
+
+.comment-editor .delete-button {
+    background-color: #ef4444;
+    color: white;
+}
