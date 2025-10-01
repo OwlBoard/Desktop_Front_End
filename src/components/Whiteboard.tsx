@@ -12,7 +12,7 @@ import CommentsLayer from "./CommentNode";
 import { Html } from 'react-konva-utils';
 import CommentNode from "./CommentNode";
 import { useComments } from "../hooks/useComments";
-import "../src/styles/CommentEditor.css";
+import "../styles/CommentEditor.css";
 
 // Para evitar error "Cannot find namespace 'JSX'"
 import type {} from "react/jsx-runtime";
