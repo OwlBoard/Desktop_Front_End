@@ -29,29 +29,73 @@ export const useComments = ({ dashboardId, userId }: UseCommentsProps) => {
     }
   }, [dashboardId]);
 
-  // Crear nuevo comentario
-  const createComment = useCallback(async (x: number, y: number, text: string = "Nuevo comentario...") => {
+  // Crear comentario temporal (para empezar a editar sin guardar aún)
+  const createTemporaryComment = useCallback((x: number, y: number) => {
+    const tempId = `temp-${Date.now()}`;
+    const tempComment: CommentDef = {
+      id: tempId,
+      backendId: undefined, // Sin ID de backend hasta que se guarde
+      text: "",
+      x: Math.round(x),
+      y: Math.round(y),
+      user: { name: "Usuario" }, // Temporal
+      dashboardId,
+      userId
+    };
+    
+    setComments(prev => [...prev, tempComment]);
+    return tempComment;
+  }, [dashboardId, userId]);
+
+  // Guardar comentario temporal (convertirlo en real)
+  const saveTemporaryComment = useCallback(async (tempCommentId: string, text: string) => {
+    const trimmedText = text.trim();
+    if (!trimmedText) {
+      throw new Error('El contenido del comentario no puede estar vacío');
+    }
+
+    const tempComment = comments.find(c => c.id === tempCommentId);
+    if (!tempComment) {
+      throw new Error('Comentario temporal no encontrado');
+    }
+
     setError(null);
     try {
       const newComment = await CommentsApiService.createComment(dashboardId, userId, {
-        content: text,
-        coordinates: `${x},${y}`
+        content: trimmedText,
+        coordinates: `${tempComment.x},${tempComment.y}`
       });
       
       const frontendComment = CommentsApiService.convertToFrontendComment(newComment);
       
-      setComments(prev => [...prev, frontendComment]);
+      // Reemplazar el comentario temporal con el real
+      setComments(prev => prev.map(c => 
+        c.id === tempCommentId ? frontendComment : c
+      ));
+      
       return frontendComment;
     } catch (err) {
-      console.error('Error creating comment:', err);
-      setError(err instanceof Error ? err.message : 'Error creating comment');
+      console.error('Error saving comment:', err);
+      setError(err instanceof Error ? err.message : 'Error saving comment');
       throw err;
     }
-  }, [dashboardId, userId]);
+  }, [dashboardId, userId, comments]);
+
+  // Cancelar comentario temporal
+  const cancelTemporaryComment = useCallback((tempCommentId: string) => {
+    setComments(prev => prev.filter(c => c.id !== tempCommentId));
+  }, []);
 
   // Actualizar comentario
   const updateComment = useCallback(async (commentId: string, newText: string) => {
     setError(null);
+    
+    // No actualizar comentario si el texto está vacío
+    const trimmedText = newText.trim();
+    if (!trimmedText) {
+      throw new Error('El contenido del comentario no puede estar vacío');
+    }
+    
     try {
       const comment = comments.find(c => c.id === commentId);
       if (!comment?.backendId) {
@@ -59,7 +103,7 @@ export const useComments = ({ dashboardId, userId }: UseCommentsProps) => {
       }
 
       const updatedComment = await CommentsApiService.updateComment(comment.backendId, {
-        content: newText
+        content: trimmedText
       });
 
       const frontendComment = CommentsApiService.convertToFrontendComment(updatedComment);
@@ -117,7 +161,9 @@ export const useComments = ({ dashboardId, userId }: UseCommentsProps) => {
     comments,
     loading,
     error,
-    createComment,
+    createTemporaryComment,
+    saveTemporaryComment,
+    cancelTemporaryComment,
     updateComment,
     deleteComment,
     updateCommentPosition,
