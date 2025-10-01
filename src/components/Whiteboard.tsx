@@ -12,6 +12,7 @@ import CommentsLayer from "./CommentNode";
 import { Html } from 'react-konva-utils';
 import CommentNode from "./CommentNode";
 import { useComments } from "../hooks/useComments";
+import "../styles/CommentEditor.css";
 
 // Para evitar error "Cannot find namespace 'JSX'"
 import type {} from "react/jsx-runtime";
@@ -78,7 +79,9 @@ export default function WhiteboardApp(): React.ReactElement {
     comments,
     loading: commentsLoading,
     error: commentsError,
-    createComment,
+    createTemporaryComment,
+    saveTemporaryComment,
+    cancelTemporaryComment,
     updateComment,
     deleteComment,
     updateCommentPosition,
@@ -168,16 +171,13 @@ export default function WhiteboardApp(): React.ReactElement {
     if (!pointer) return;
     
     if (tool === "comment") {
-      // Crear comentario usando el hook que se conecta al backend
-      createComment(pointer.x, pointer.y, "Nuevo comentario...")
-        .then((newComment) => {
-          console.log('Comentario creado:', newComment);
-          setTool("select"); // Vuelve a la herramienta de selección
-        })
-        .catch((error) => {
-          console.error('Error al crear comentario:', error);
-          alert('Error al crear comentario: ' + error.message);
-        });
+      // Crear comentario temporal para empezar a editar
+      const tempComment = createTemporaryComment(pointer.x, pointer.y);
+      console.log('Comentario temporal creado:', tempComment);
+      // Iniciar edición inmediatamente
+      setEditingCommentId(tempComment.id);
+      setEditingCommentText("");
+      setTool("select"); // Vuelve a la herramienta de selección
       return; // Termina la función aquí
     }
 
@@ -647,45 +647,125 @@ export default function WhiteboardApp(): React.ReactElement {
                     x: comments.find(c => c.id === editingCommentId)!.x + 20,
                     y: comments.find(c => c.id === editingCommentId)!.y - 20,
                   }}>
-                    <textarea
-                      style={{
-                        width: '200px',
-                        height: '100px',
-                        border: '1px solid #ccc',
-                        borderRadius: '4px',
-                        padding: '8px',
-                        fontSize: '14px',
-                        fontFamily: 'sans-serif'
-                      }}
-                      value={editingCommentText}
-                      onChange={(e) => {
-                        setEditingCommentText(e.currentTarget.value);
-                      }}
+                    <div className="comment-editor-container">
+                      <textarea
+                        className="comment-textarea"
+                        value={editingCommentText}
+                        onChange={(e) => {
+                          setEditingCommentText(e.currentTarget.value);
+                        }}
                       onKeyDown={(e) => {
+                        // Evitar propagación para no interferir con el canvas
+                        e.stopPropagation();
+                        
                         if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
                           // Guardar comentario cuando se presiona Enter
                           if (editingCommentId && editingCommentText.trim()) {
-                            updateComment(editingCommentId, editingCommentText.trim())
-                              .then(() => {
-                                setEditingCommentId(null);
-                                setEditingCommentText("");
-                              })
-                              .catch((error) => {
-                                console.error('Error al actualizar comentario:', error);
-                                alert('Error al actualizar comentario: ' + error.message);
-                              });
+                            // Verificar si es un comentario temporal
+                            const comment = comments.find(c => c.id === editingCommentId);
+                            const isTemporary = comment && !comment.backendId;
+                            
+                            if (isTemporary) {
+                              // Guardar comentario temporal
+                              saveTemporaryComment(editingCommentId, editingCommentText.trim())
+                                .then(() => {
+                                  setEditingCommentId(null);
+                                  setEditingCommentText("");
+                                })
+                                .catch((error) => {
+                                  console.error('Error al guardar comentario:', error);
+                                  alert('Error al guardar comentario: ' + error.message);
+                                });
+                            } else {
+                              // Actualizar comentario existente
+                              updateComment(editingCommentId, editingCommentText.trim())
+                                .then(() => {
+                                  setEditingCommentId(null);
+                                  setEditingCommentText("");
+                                })
+                                .catch((error) => {
+                                  console.error('Error al actualizar comentario:', error);
+                                  alert('Error al actualizar comentario: ' + error.message);
+                                });
+                            }
                           } else {
+                            // Si el comentario está vacío, cancelarlo
+                            if (editingCommentId) {
+                              const comment = comments.find(c => c.id === editingCommentId);
+                              const isTemporary = comment && !comment.backendId;
+                              
+                              if (isTemporary) {
+                                cancelTemporaryComment(editingCommentId);
+                              } else {
+                                if (confirm('¿Estás seguro de que quieres eliminar este comentario?')) {
+                                  deleteComment(editingCommentId)
+                                    .catch((error) => {
+                                      console.error('Error al eliminar comentario vacío:', error);
+                                    });
+                                }
+                              }
+                            }
                             setEditingCommentId(null);
                             setEditingCommentText("");
                           }
                         }
                         if (e.key === 'Escape') {
-                            setEditingCommentId(null); // Cancelar con Escape
-                            setEditingCommentText("");
+                          e.preventDefault();
+                          // Cancelar edición
+                          if (editingCommentId) {
+                            const comment = comments.find(c => c.id === editingCommentId);
+                            const isTemporary = comment && !comment.backendId;
+                            
+                            if (isTemporary) {
+                              // Si es temporal, simplemente cancelarlo
+                              cancelTemporaryComment(editingCommentId);
+                            }
+                            // Si no es temporal, simplemente cancelar la edición sin borrar
+                          }
+                          setEditingCommentId(null);
+                          setEditingCommentText("");
                         }
                       }}
                       autoFocus
+                      placeholder="Escribe tu comentario aquí..."
                     />
+                    <button
+                      className="comment-delete-button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (editingCommentId) {
+                          const comment = comments.find(c => c.id === editingCommentId);
+                          const isTemporary = comment && !comment.backendId;
+                          
+                          if (isTemporary) {
+                            // Si es temporal, confirmar antes de cancelar
+                            if (confirm('¿Estás seguro de que quieres eliminar este comentario?')) {
+                              cancelTemporaryComment(editingCommentId);
+                            } else {
+                              return; // No hacer nada si el usuario cancela
+                            }
+                          } else {
+                            // Si no es temporal, confirmar antes de eliminarlo del backend
+                            if (confirm('¿Estás seguro de que quieres eliminar este comentario?')) {
+                              deleteComment(editingCommentId)
+                                .catch((error) => {
+                                  console.error('Error al eliminar comentario:', error);
+                                  alert('Error al eliminar comentario: ' + error.message);
+                                });
+                            } else {
+                              return; // No hacer nada si el usuario cancela
+                            }
+                          }
+                          setEditingCommentId(null);
+                          setEditingCommentText("");
+                        }
+                      }}
+                      title="Eliminar comentario"
+                    >
+                      ×
+                    </button>
+                    </div>
                   </Html>
                 )}
               </Layer>

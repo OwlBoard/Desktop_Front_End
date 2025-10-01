@@ -33,7 +33,7 @@ export class CommentsApiService {
   ): Promise<CommentResponse> {
     console.log('Creando comentario:', { dashboardId, userId, commentData });
     
-    const url = `${API_BASE_URL}/dashboards/${dashboardId}/users/${userId}/comments?coordinates=${commentData.coordinates}`;
+    const url = `${API_BASE_URL}/dashboards/${dashboardId}/users/${userId}/comments`;
     console.log('URL:', url);
     
     const response = await fetch(url, {
@@ -42,7 +42,10 @@ export class CommentsApiService {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
-      body: JSON.stringify({ content: commentData.content }),
+       body: JSON.stringify({
+        content: commentData.content,
+        coordinates: commentData.coordinates
+      }),
     });
 
     console.log('Response status:', response.status);
@@ -132,4 +135,5 @@ export class CommentsApiService {
       coordinates: `${frontendComment.x},${frontendComment.y}`
     };
   }
+
 }
