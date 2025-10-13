@@ -1,0 +1,140 @@
+.right-sidebar {
+  width: 220px; /* 🔹 un poco más angosto para igualar proporción */
+  flex-shrink: 0;
+  padding: 16px;
+  background-color:  rgba(40, 50, 73, 0.65); /* azul oscuro */
+  border-left: 2px solid #1e293b;
+  color: #f8fafc;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Inter', sans-serif;
+  box-shadow: -4px 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.right-sidebar h6 {
+  margin: 0 0 14px 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #b4d9ff;
+  text-align: center;
+  border-bottom: 1px solid #1e293b;
+  padding-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* === Layer cards === */
+.layer-card {
+  padding: 10px;
+  border-radius: 8px;
+  background: #1e293b;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s ease;
+}
+
+.layer-card.active {
+  background: #6a95d6;
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.45);
+}
+
+.layer-card:hover {
+  background: #607194;
+}
+
+/* === Layer header === */
+.layer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.layer-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f1f5f9;
+  user-select: none;
+}
+
+/* === Layer buttons === */
+.layer-actions {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.icon-btn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  color: #72bcee;
+  transition: background 0.2s, color 0.2s;
+}
+
+/*iconitos de borrar y eso*/
+
+.icon-btn:hover {
+  background: rgb(106, 128, 163);
+  color: #60a5fa;
+}
+
+.icon-btn:disabled {
+  color: #454b53;
+  cursor: not-allowed;
+}
+
+/* === Add Layer button === */
+.add-layer-btn {
+  margin-top: 16px;
+  width: 100%;
+  padding: 8px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 8px;
+  background: #3b4761;
+  color: #fff;
+  font-weight: 600;
+  font-size: 13px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.add-layer-btn:hover {
+  background: #8397c2;
+}
+
+/* === Selected objects box === */
+.selected-box {
+  margin-top: 16px;
+  padding: 12px;
+  background: #343d55;
+  border-radius: 8px;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: #dbeafe;
+}
+
+.delete-selected-btn {
+  padding: 6px 0;
+  border-radius: 6px;
+  border: 1px solid #ef4444;
+  color: #f87171;
+  font-weight: 500;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.delete-selected-btn:hover {
+  background: rgba(239, 68, 68, 0.15);
+}
