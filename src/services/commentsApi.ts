@@ -10,13 +10,14 @@ export interface CreateCommentRequest {
 
 // Basado en el schema CommentOut del Swagger
 export interface CommentResponse {
-  _id: string;  // PydanticObjectId - 24 caracteres hex
-  dashboard_id: string;  // PydanticObjectId
-  user_id: string;  // PydanticObjectId  
-  content: string;  // 1-500 caracteres
-  coordinates: number[];  // Array de números [x, y]
-  created_at: string;  // ISO date-time string
-  updated_at: string;  // ISO date-time string
+  _id?: string;  // Optional porque puede venir como 'id'
+  id?: string;   // Optional porque puede venir como '_id'
+  dashboard_id: string;
+  user_id: string;
+  content: string;
+  coordinates: number[];
+  created_at: string;
+  updated_at: string;
 }
 
 export interface UpdateCommentRequest {
@@ -42,20 +43,18 @@ export class CommentsApiService {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
-       body: JSON.stringify({
+      body: JSON.stringify({
         content: commentData.content,
         coordinates: commentData.coordinates
       }),
     });
 
     console.log('Response status:', response.status);
-    console.log('Response headers:', Object.fromEntries(response.headers.entries()));
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       console.error('Error response:', errorData);
       
-      // Manejo específico de errores según el Swagger
       if (response.status === 422) {
         const validationErrors = errorData.detail || [];
         throw new Error(`Validation Error: ${validationErrors.map((e: any) => e.msg).join(', ')}`);
@@ -71,21 +70,38 @@ export class CommentsApiService {
 
   // Obtener todos los comentarios de un tablero
   static async getCommentsByDashboard(dashboardId: string): Promise<CommentResponse[]> {
-    const response = await fetch(`${API_BASE_URL}/dashboards/${dashboardId}`);
+    console.log('Fetching comments for dashboard:', dashboardId);
+    const url = `${API_BASE_URL}/dashboards/${dashboardId}`;
+    
+    const response = await fetch(url, {
+      headers: {
+        'Accept': 'application/json',
+      }
+    });
 
     if (!response.ok) {
+      // If 404, the dashboard might not have comments yet - return empty array
+      if (response.status === 404) {
+        console.log('No comments found for dashboard (404)');
+        return [];
+      }
       throw new Error(`Error fetching comments: ${response.status} - ${response.statusText}`);
     }
 
-    return response.json();
+    const result = await response.json();
+    console.log('Comments fetched:', result);
+    return result;
   }
 
   // Actualizar un comentario
   static async updateComment(commentId: string, updateData: UpdateCommentRequest): Promise<CommentResponse> {
+    console.log('Updating comment:', commentId, updateData);
+    
     const response = await fetch(`${API_BASE_URL}/${commentId}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
       },
       body: JSON.stringify(updateData),
     });
@@ -95,11 +111,15 @@ export class CommentsApiService {
       throw new Error(`Error updating comment: ${response.status} - ${errorData.detail || response.statusText}`);
     }
 
-    return response.json();
+    const result = await response.json();
+    console.log('Comment updated:', result);
+    return result;
   }
 
   // Eliminar un comentario
   static async deleteComment(commentId: string): Promise<void> {
+    console.log('Deleting comment:', commentId);
+    
     const response = await fetch(`${API_BASE_URL}/${commentId}`, {
       method: 'DELETE',
     });
@@ -107,12 +127,17 @@ export class CommentsApiService {
     if (!response.ok) {
       throw new Error(`Error deleting comment: ${response.status} - ${response.statusText}`);
     }
+    
+    console.log('Comment deleted successfully');
   }
 
   // Convertir respuesta del backend a formato del frontend
   static convertToFrontendComment(backendComment: CommentResponse): CommentDef {
+    // Handle both _id and id from backend
+    const commentId = backendComment._id || backendComment.id || '';
+    
     return {
-      id: backendComment._id,
+      id: commentId,
       x: backendComment.coordinates[0],
       y: backendComment.coordinates[1],
       text: backendComment.content,
@@ -120,7 +145,7 @@ export class CommentsApiService {
         name: "Usuario" // Por ahora placeholder, después integrar con user service
       },
       // Añadimos campos adicionales para tracking
-      backendId: backendComment._id,
+      backendId: commentId,
       dashboardId: backendComment.dashboard_id,
       userId: backendComment.user_id,
       createdAt: backendComment.created_at,

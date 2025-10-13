@@ -1,0 +1,108 @@
+/* src/styles/LoginPage.css */
+
+body, html, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%; /* ensure height consistency */
+  background-color: #3f4a64; /* safety background */
+  overflow-x: hidden; /* prevent scrollbars */
+}
+
+.login-background {
+  margin: 0;
+  padding-top: 80px; /* Adjust if your top bar is fixed */
+  min-height: calc(100vh - 80px); /* avoid overflow below */
+  background: linear-gradient(135deg, #67758d 0%, #3f4a64 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: calc(100vh - 70px); /* subtract topbar height */
+  background: linear-gradient(135deg, #67758d 0%, #3f4a64 100%);
+  font-family: "Poppins", sans-serif;
+}
+
+.login-card {
+  background-color: #ffffff;
+  padding: 2.5rem 3rem;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+}
+
+.login-card h2 {
+  color: #2f3b52;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+
+.login-subtitle {
+  color: #555;
+  font-size: 0.95rem;
+  margin-bottom: 2rem;
+}
+
+.login-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.login-card input {
+  padding: 0.75rem 1rem;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.login-card input:focus {
+  outline: none;
+  border-color: #2e415a;
+  box-shadow: 0 0 5px rgba(46, 65, 90, 0.4);
+}
+
+.login-card button {
+  padding: 0.8rem;
+  background-color: #303a4d;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.login-card button:hover {
+  background-color: #131925;
+}
+
+.error-text {
+  color: #d9534f;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.login-footer {
+  margin-top: 1.5rem;
+  font-size: 0.95rem;
+  color: #3f4157;
+}
+
+.register-link {
+  color: #7aabbe;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.register-link:hover {
+  text-decoration: underline;
+}

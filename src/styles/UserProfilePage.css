@@ -1,46 +1,66 @@
 .user-profile-page {
-  max-width: 600px;
-  margin: 40px auto;
-  padding: 24px;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  background: linear-gradient(180deg, #0a192f, #112240);
+  color: white;
+  min-height: 100vh;
+  padding-top: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
+
+.profile-container {
+  max-width: 700px;
+  margin-top: 40px;
+}
+
+.profile-card {
+  background-color: #1e293b;
+  color: #f1f5f9;
+  border: none;
+  border-radius: 16px;
+  padding: 24px;
+}
+
 .profile-header {
   display: flex;
   align-items: center;
-  margin-bottom: 24px;
+  justify-content: space-between;
+  flex-wrap: wrap;
 }
-.profile-photo {
-  width: 100px;
-  height: 100px;
+
+.profile-avatar {
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
   object-fit: cover;
+  border: 3px solid #38bdf8;
   margin-right: 24px;
-  border: 2px solid #eee;
 }
-.profile-info h2 {
-  margin: 0 0 8px 0;
+
+.profile-info {
+  flex: 1;
+  min-width: 200px;
 }
-.profile-tabs {
-  margin-top: 24px;
+
+.profile-info h3 {
+  margin: 0;
+  color: #38bdf8;
 }
-.tab {
-  background: #f5f5f5;
-  border: none;
-  padding: 10px 24px;
-  border-radius: 6px 6px 0 0;
-  margin-right: 8px;
-  cursor: pointer;
-  font-weight: 500;
+
+.profile-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
-.tab.active {
-  background: #e0e0e0;
-}
-.tab-content {
-  background: #fafafa;
-  padding: 20px;
-  border-radius: 0 0 8px 8px;
-  border: 1px solid #e0e0e0;
-  border-top: none;
+
+.profile-loading {
+  background-color: #0a192f;
+  color: white;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 18px;
 }

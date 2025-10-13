@@ -1,11 +1,10 @@
-// src/hooks/useComments.ts
-import { useState, useCallback, useEffect } from 'react';
-import { CommentDef } from '../types/types';
-import { CommentsApiService, CommentResponse } from '../services/commentsApi';
+import { useState, useCallback, useEffect } from "react";
+import { CommentDef } from "../types/types";
+import { CommentsApiService } from "../services/commentsApi";
 
 interface UseCommentsProps {
   dashboardId: string;
-  userId: string; // Por ahora hardcoded, después integrar con auth
+  userId: string;
 }
 
 export const useComments = ({ dashboardId, userId }: UseCommentsProps) => {
@@ -13,149 +12,89 @@ export const useComments = ({ dashboardId, userId }: UseCommentsProps) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Cargar comentarios del tablero
+  // 🔹 Cargar todos los comentarios
   const loadComments = useCallback(async () => {
     setLoading(true);
-    setError(null);
     try {
       const backendComments = await CommentsApiService.getCommentsByDashboard(dashboardId);
       const frontendComments = backendComments.map(CommentsApiService.convertToFrontendComment);
       setComments(frontendComments);
     } catch (err) {
-      console.error('Error loading comments:', err);
-      setError(err instanceof Error ? err.message : 'Error loading comments');
+      console.error("Error loading comments:", err);
+      setError(err instanceof Error ? err.message : "Error loading comments");
     } finally {
       setLoading(false);
     }
   }, [dashboardId]);
 
-  // Crear comentario temporal (para empezar a editar sin guardar aún)
+  // 🔹 Crear comentario temporal
   const createTemporaryComment = useCallback((x: number, y: number) => {
     const tempId = `temp-${Date.now()}`;
     const tempComment: CommentDef = {
       id: tempId,
-      backendId: undefined, // Sin ID de backend hasta que se guarde
+      backendId: undefined,
       text: "",
-      x: Math.round(x),
-      y: Math.round(y),
-      user: { name: "Usuario" }, // Temporal
+      x,
+      y,
+      user: { name: "Usuario" },
       dashboardId,
-      userId
+      userId,
     };
-    
-    setComments(prev => [...prev, tempComment]);
+    setComments((prev) => [...prev, tempComment]);
     return tempComment;
   }, [dashboardId, userId]);
 
-  // Guardar comentario temporal (convertirlo en real)
-  const saveTemporaryComment = useCallback(async (tempCommentId: string, text: string) => {
-    const trimmedText = text.trim();
-    if (!trimmedText) {
-      throw new Error('El contenido del comentario no puede estar vacío');
-    }
+  // 🔹 Guardar comentario en backend
+  const saveTemporaryComment = useCallback(
+    async (tempId: string, text: string) => {
+      const comment = comments.find((c) => c.id === tempId);
+      if (!comment) return;
 
-    const tempComment = comments.find(c => c.id === tempCommentId);
-    if (!tempComment) {
-      throw new Error('Comentario temporal no encontrado');
-    }
+      const newComment = await CommentsApiService.createComment(
+        dashboardId,
+        userId,
+        CommentsApiService.convertToBackendComment({ ...comment, text })
+      );
+      const converted = CommentsApiService.convertToFrontendComment(newComment);
 
-    setError(null);
-    try {
-      const newComment = await CommentsApiService.createComment(dashboardId, userId, {
-        content: trimmedText,
-        coordinates: `${tempComment.x},${tempComment.y}`
-      });
-      
-      const frontendComment = CommentsApiService.convertToFrontendComment(newComment);
-      
-      // Reemplazar el comentario temporal con el real
-      setComments(prev => prev.map(c => 
-        c.id === tempCommentId ? frontendComment : c
-      ));
-      
-      return frontendComment;
-    } catch (err) {
-      console.error('Error saving comment:', err);
-      setError(err instanceof Error ? err.message : 'Error saving comment');
-      throw err;
-    }
-  }, [dashboardId, userId, comments]);
+      setComments((prev) =>
+        prev.map((c) => (c.id === tempId ? converted : c))
+      );
+      return converted;
+    },
+    [comments, dashboardId, userId]
+  );
 
-  // Cancelar comentario temporal
-  const cancelTemporaryComment = useCallback((tempCommentId: string) => {
-    setComments(prev => prev.filter(c => c.id !== tempCommentId));
+  // 🔹 Cancelar comentario temporal
+  const cancelTemporaryComment = useCallback((id: string) => {
+    setComments((prev) => prev.filter((c) => c.id !== id));
   }, []);
 
-  // Actualizar comentario
-  const updateComment = useCallback(async (commentId: string, newText: string) => {
-    setError(null);
-    
-    // No actualizar comentario si el texto está vacío
-    const trimmedText = newText.trim();
-    if (!trimmedText) {
-      throw new Error('El contenido del comentario no puede estar vacío');
-    }
-    
-    try {
-      const comment = comments.find(c => c.id === commentId);
-      if (!comment?.backendId) {
-        throw new Error('Comment not found or missing backend ID');
-      }
-
-      const updatedComment = await CommentsApiService.updateComment(comment.backendId, {
-        content: trimmedText
-      });
-
-      const frontendComment = CommentsApiService.convertToFrontendComment(updatedComment);
-      
-      setComments(prev => prev.map(c => 
-        c.id === commentId ? frontendComment : c
-      ));
-      
-      return frontendComment;
-    } catch (err) {
-      console.error('Error updating comment:', err);
-      setError(err instanceof Error ? err.message : 'Error updating comment');
-      throw err;
-    }
+  // 🔹 Actualizar comentario
+  const updateComment = useCallback(async (id: string, text: string) => {
+    const comment = comments.find((c) => c.id === id);
+    if (!comment?.backendId) return;
+    const updated = await CommentsApiService.updateComment(comment.backendId, { content: text });
+    const converted = CommentsApiService.convertToFrontendComment(updated);
+    setComments((prev) => prev.map((c) => (c.id === id ? converted : c)));
   }, [comments]);
 
-  // Eliminar comentario
-  const deleteComment = useCallback(async (commentId: string) => {
-    setError(null);
-    try {
-      const comment = comments.find(c => c.id === commentId);
-      if (!comment?.backendId) {
-        throw new Error('Comment not found or missing backend ID');
-      }
-
-      await CommentsApiService.deleteComment(comment.backendId);
-      
-      setComments(prev => prev.filter(c => c.id !== commentId));
-    } catch (err) {
-      console.error('Error deleting comment:', err);
-      setError(err instanceof Error ? err.message : 'Error deleting comment');
-      throw err;
-    }
+  // 🔹 Eliminar comentario
+  const deleteComment = useCallback(async (id: string) => {
+    const comment = comments.find((c) => c.id === id);
+    if (!comment?.backendId) return;
+    await CommentsApiService.deleteComment(comment.backendId);
+    setComments((prev) => prev.filter((c) => c.id !== id));
   }, [comments]);
 
-  // Actualizar posición del comentario (para drag & drop)
-  const updateCommentPosition = useCallback((commentId: string, x: number, y: number) => {
-    setComments(prev => prev.map(c => 
-      c.id === commentId ? { ...c, x: Math.round(x), y: Math.round(y) } : c
-    ));
-    
-    // Opcional: también actualizar en el backend
-    // Por ahora solo actualiza localmente para mejor performance
-    // Se podría implementar un debounce para actualizar en el backend después de parar de arrastrar
+  // 🔹 Mover comentario (drag)
+  const updateCommentPosition = useCallback((id: string, x: number, y: number) => {
+    setComments((prev) => prev.map((c) => (c.id === id ? { ...c, x, y } : c)));
   }, []);
 
-  // Cargar comentarios al montar el componente
   useEffect(() => {
-    if (dashboardId && userId) {
-      loadComments();
-    }
-  }, [dashboardId, userId, loadComments]);
+    loadComments();
+  }, [loadComments]);
 
   return {
     comments,
@@ -167,6 +106,5 @@ export const useComments = ({ dashboardId, userId }: UseCommentsProps) => {
     updateComment,
     deleteComment,
     updateCommentPosition,
-    loadComments
   };
 };
