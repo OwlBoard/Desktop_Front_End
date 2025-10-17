@@ -10,13 +10,16 @@ import { useComments } from "../hooks/useComments";
 
 import { Canvas } from "./whiteboard/Canvas";
 import { RightSidebar } from "./whiteboard/RightSidebar";
+import ChatPanel from "./ChatPanel";
 import Toolbar from "./whiteboard/Toolbar";
 import PropertiesPanel from "./PropertiesPanel";
 
 import { ToolOption } from "../types/types";
+import type { LayerDef } from "../types/whiteboard";
 import { getUserMongoId } from "../utils/UserMongoId";
 
 export default function WhiteboardApp(): React.ReactElement {
+  const rootRef = useRef<HTMLDivElement | null>(null);
   const canvasWrapperRef = useRef<HTMLDivElement | null>(null);
   const stageRef = useRef<Konva.Stage | null>(null);
 
@@ -26,6 +29,8 @@ export default function WhiteboardApp(): React.ReactElement {
   const [size, setSize] = useState<number>(2);
   const [opacity, setOpacity] = useState<number>(1);
   const [stageSize, setStageSize] = useState({ width: 1000, height: 700 });
+  const [chatWidth, setChatWidth] = useState<number>(320);
+  const [isResizing, setIsResizing] = useState<boolean>(false);
 
   const USER_ID = getUserMongoId();
   const DASHBOARD_ID = "507f1f77bcf86cd799439011";
@@ -49,8 +54,8 @@ export default function WhiteboardApp(): React.ReactElement {
   const drawing = useDrawing({ tool, currentLayer, color, fillColor, size, opacity, setShapes, screenToWorld });
 
   const handleMoveLayer = (id: string, direction: "up" | "down") => {
-    setLayers((prev) => {
-      const index = prev.findIndex((l) => l.id === id);
+    setLayers((prev: LayerDef[]) => {
+      const index = prev.findIndex((l: LayerDef) => l.id === id);
       if (index === -1) return prev;
       const newLayers = [...prev];
       const target = direction === "up" ? index - 1 : index + 1;
@@ -88,7 +93,7 @@ export default function WhiteboardApp(): React.ReactElement {
     const clickedOnShape = e.target !== stage && e.target.name() !== "background";
     if (e.target === stage || e.target.name() === "background") setSelectedIds([]);
 
-    const currentLayerObj = layers.find((l) => l.id === currentLayer);
+  const currentLayerObj = layers.find((l: LayerDef) => l.id === currentLayer);
     if (currentLayerObj?.locked) return;
 
     if (tool !== "select" && tool !== "comment" && !clickedOnShape) {
@@ -110,8 +115,8 @@ export default function WhiteboardApp(): React.ReactElement {
   const handleShapeClick = (e: KonvaEventObject<MouseEvent>, id: string) => {
     if (tool !== "select") return;
     e.cancelBubble = true;
-    setSelectedIds((prev) =>
-      e.evt.shiftKey ? (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]) : [id]
+    setSelectedIds((prev: string[]) =>
+      e.evt.shiftKey ? (prev.includes(id) ? prev.filter((i: string) => i !== id) : [...prev, id]) : [id]
     );
   };
 
@@ -127,12 +132,51 @@ export default function WhiteboardApp(): React.ReactElement {
     return () => window.removeEventListener("resize", measure);
   }, []);
 
+  // Recalculate canvas size when chat width changes
+  useEffect(() => {
+    if (canvasWrapperRef.current) {
+      const rect = canvasWrapperRef.current.getBoundingClientRect();
+      setStageSize({ width: rect.width, height: rect.height });
+    }
+  }, [chatWidth]);
+
+  // Drag-to-resize handlers for the vertical resizer
+  useEffect(() => {
+    if (!isResizing) return;
+
+    const onMove = (e: MouseEvent) => {
+      const container = rootRef.current;
+      if (!container) return;
+      const rect = container.getBoundingClientRect();
+      const proposed = rect.right - e.clientX; // width from mouse to right edge
+      const clamped = Math.max(240, Math.min(560, proposed));
+      setChatWidth(clamped);
+      // prevent text selection while dragging
+      document.body.style.userSelect = "none";
+      document.body.style.cursor = "col-resize";
+    };
+    const onUp = () => {
+      setIsResizing(false);
+      document.body.style.userSelect = "";
+      document.body.style.cursor = "";
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+  }, [isResizing]);
+
   return (
     <div
+      ref={rootRef}
       style={{
-        height: "100vh",
+        height: "100%",
+        minHeight: 0,
         display: "grid",
-        gridTemplateColumns: `225px 1fr 270px 240px`,
+        gridTemplateColumns: `225px 1fr 270px 6px ${chatWidth}px`,
+        gridTemplateRows: `1fr`,
         background: " rgba(15, 23, 42, 0.65)",
       }}
     >
@@ -185,6 +229,24 @@ export default function WhiteboardApp(): React.ReactElement {
           onDeleteSelected={deleteSelectedShapes}
           onMoveLayer={handleMoveLayer}
         />
+      </div>
+
+      {/* Vertical resizer between layers and chat */}
+      <div
+        onMouseDown={() => setIsResizing(true)}
+        title="Drag to resize chat"
+        style={{
+          cursor: "col-resize",
+          background: isResizing ? "#3b82f6" : "#1e293b",
+          width: "6px",
+          height: "100%",
+          userSelect: "none",
+        }}
+      />
+
+      {/* Chat panel - sticks to the far right, Meet-like */}
+      <div style={{ background: " rgba(15, 23, 42, 0.65)", borderLeft: "1px solid #1e293b", padding: 0, minWidth: 0, height: "100%", display: "flex", flexDirection: "column" }}>
+        <ChatPanel />
       </div>
     </div>
   );

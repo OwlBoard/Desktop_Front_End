@@ -1,0 +1,124 @@
+/* Meet-like right-side chat panel */
+.chat-panel {
+  height: 100%;
+  min-height: 0; /* allow children to size/scroll properly in grid/flex context */
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  background: rgba(40, 50, 73, 0.65);
+  color: #e5e7eb;
+  width: 100%;
+}
+
+.chat-panel.collapsed {
+  grid-template-rows: 48px;
+}
+
+.chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  border-bottom: 1px solid #1e293b;
+  background: rgba(22, 30, 46, 0.65);
+}
+
+.chat-title {
+  font-weight: 700;
+  color: #b4d9ff;
+}
+
+.chat-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.chat-btn {
+  background: transparent;
+  border: 1px solid #334155;
+  color: #cbd5e1;
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.chat-btn:hover {
+  background: #334155;
+}
+
+.chat-messages {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  min-height: 0; /* critical for scroll within flex */
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chat-empty {
+  opacity: 0.7;
+  text-align: center;
+  margin-top: 24px;
+}
+
+.chat-bubble {
+  max-width: 85%;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #1e293b;
+  border: 1px solid #334155;
+}
+
+.chat-bubble.me {
+  align-self: flex-end;
+  background: #2a3a57;
+}
+
+.chat-meta {
+  display: flex;
+  gap: 8px;
+  font-size: 11px;
+  opacity: 0.8;
+  margin-bottom: 4px;
+}
+
+.chat-author {
+  font-weight: 600;
+}
+
+.chat-text {
+  white-space: pre-wrap;
+}
+
+.chat-input-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  padding: 10px;
+  border-top: 1px solid #1e293b;
+  background: rgba(22, 30, 46, 0.65);
+}
+
+.chat-input {
+  width: 100%;
+  background: #0f172a;
+  color: #e5e7eb;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.chat-send {
+  background: #3b82f6;
+  border: none;
+  color: white;
+  padding: 0 14px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.chat-send:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

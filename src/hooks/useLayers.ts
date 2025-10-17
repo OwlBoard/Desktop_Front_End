@@ -11,7 +11,7 @@ export const useLayers = (setShapes: React.Dispatch<React.SetStateAction<ShapeDe
 
   const addLayer = () => {
     const id = uuidv4();
-    setLayers((prev) => [...prev, { id, name: `Layer ${prev.length + 1}`, visible: true, locked: false }]);
+    setLayers((prev: LayerDef[]) => [...prev, { id, name: `Layer ${prev.length + 1}`, visible: true, locked: false }]);
     setCurrentLayer(id);
   };
 
@@ -19,23 +19,23 @@ export const useLayers = (setShapes: React.Dispatch<React.SetStateAction<ShapeDe
     if (layers.length === 1) return;
     const nextLayers = layers.filter((l) => l.id !== id);
     setLayers(nextLayers);
-    setShapes((prev) => prev.filter((s) => s.layerId !== id));
+    setShapes((prev: ShapeDef[]) => prev.filter((s) => s.layerId !== id));
     if (currentLayer === id) {
       setCurrentLayer(nextLayers[0]?.id || "");
     }
   };
 
   const toggleLayerVisibility = (id: string) => {
-    setLayers((prev) =>
-      prev.map((l) => (l.id === id ? { ...l, visible: !l.visible } : l))
+    setLayers((prev: LayerDef[]) =>
+      prev.map((l: LayerDef) => (l.id === id ? { ...l, visible: !l.visible } : l))
     );
   };
 
   const toggleLayerLock = (id: string) => {
-    setLayers((prev) =>
-      prev.map((l) => (l.id === id ? { ...l, locked: !l.locked } : l))
+    setLayers((prev: LayerDef[]) =>
+      prev.map((l: LayerDef) => (l.id === id ? { ...l, locked: !l.locked } : l))
     );
   };
 
-  return { layers, currentLayer, setCurrentLayer, addLayer, removeLayer, toggleLayerVisibility, toggleLayerLock };
+  return { layers, currentLayer, setCurrentLayer, addLayer, removeLayer, toggleLayerVisibility, toggleLayerLock, setLayers };
 };
