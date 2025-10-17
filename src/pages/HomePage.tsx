@@ -50,11 +50,19 @@ const HomePage: React.FC = () => {
           <p className="lead">Dibuja, anota y comparte tus ideas en tiempo real.</p>
           <p>Tu pizarra colaborativa para equipos creativos y educativos.</p>
           <div className="mt-4">
-            <Link to="/dashboards/:id">
-              <Button variant="light" size="lg" className="m-2">
-                Create a board
-              </Button>
-            </Link>
+            {isLoggedIn ? (
+              <Link to={`/users/${localStorage.getItem("user_id")}/dashboards`}>
+                <Button variant="light" size="lg" className="m-2">
+                  Create a board
+                </Button>
+              </Link>
+            ) : (
+              <Link to="/login">
+                <Button variant="light" size="lg" className="m-2">
+                  Create a board
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       </section>

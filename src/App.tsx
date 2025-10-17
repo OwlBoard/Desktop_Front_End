@@ -24,8 +24,8 @@ function App() {
           <Route path="/boards" element={<MyBoardsPage />} />
           <Route path="/board/:boardId" element={<PaintPage />} />
           <Route path="/profile/:id" element={<UserProfilePage />} />
+          <Route path="/users/:userId/dashboards" element={<UserDashboardsPage />} />
           <Route path="*" element={<h2>Página no encontrada</h2>} />
-          <Route path="/dashboards/:id" element={<UserDashboardsPage />} />
         </Routes>
       </div>
     </Router>
