@@ -1,0 +1,88 @@
+.dashboards-page {
+  background-color: rgba(15, 23, 42, 0.65);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Encabezado azul */
+.dashboards-header {
+  background: linear-gradient(135deg, #485568, #253b58);
+  color: white;
+  padding: 50px 0 30px;
+  margin-top: 80px; /* espacio para topbar */
+  text-align: center;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+}
+
+.page-title {
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+.username {
+  color: #80deea;
+  font-weight: 500;
+}
+
+.dashboards-container {
+  flex-grow: 1;
+  padding: 40px 0;
+}
+
+.dashboard-card {
+  background-color: #ffffff;
+  border: none;
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  transition: all 0.25s ease;
+  height: 100%;
+  text-align: center;
+  padding-top: 15px;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
+}
+
+.dashboard-card .placeholder-icon {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+
+.dashboard-card .card-title {
+  color: #1565c0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.dashboard-card .card-text {
+  color: #555;
+  font-size: 0.95rem;
+  margin-bottom: 1.2rem;
+  min-height: 60px;
+}
+
+.go-profile-btn {
+  font-weight: 500;
+  border-radius: 8px;
+  padding: 10px 20px;
+  transition: all 0.2s ease-in-out;
+}
+
+.go-profile-btn:hover {
+  background-color: #354763;
+  color: white;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .page-title {
+    font-size: 1.4rem;
+  } 
+
+  .dashboards-header {
+    padding: 35px 0 25px;
+  }
+}

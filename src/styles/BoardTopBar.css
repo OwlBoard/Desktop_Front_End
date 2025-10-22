@@ -1,0 +1,84 @@
+.board-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 1.5rem;
+  background-color: #2b3245 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  font-family: "Poppins", sans-serif;
+  z-index: 1050;
+}
+
+.board-logo {
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 1.2rem;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.3s ease;
+}
+
+.board-logo:hover {
+  color: #90c8ff;
+}
+
+.board-left-section {
+  display: flex;
+  align-items: center;
+}
+
+.board-right-section {
+  display: flex;
+  align-items: center;
+}
+
+.back-btn {
+  font-size: 0.85rem;
+  border-color: #90c8ff !important;
+  color: #90c8ff !important;
+  transition: all 0.3s ease;
+}
+
+.back-btn:hover {
+  background-color: #374553 !important;
+  color: #2b3245 !important;
+}
+
+.invite-btn {
+  background-color: #334352 !important;
+  color: #2b3245 !important;
+  font-weight: 600;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.invite-btn:hover {
+  background-color: #b0dbff !important;
+}
+
+.dropdown-toggle {
+  font-size: 0.9rem !important;
+  border: none !important;
+}
+
+.dropdown-menu {
+  background-color: #2f3b52 !important;
+  border: none;
+  border-radius: 8px;
+}
+
+.dropdown-item {
+  color: #ffffff !important;
+  transition: background-color 0.25s ease;
+}
+
+.dropdown-item:hover {
+  background-color: #1f2a3b !important;
+  color: #e5e9f0 !important;
+}
+
+.board-menu {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}

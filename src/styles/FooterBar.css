@@ -1,0 +1,20 @@
+.footer-bar {
+  width: 100%;
+  height: 80px;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  text-align: center;
+  background: #2e3544;
+  color: #e6e6e6;
+  font-size: 0.9rem;
+  padding: 0.75rem 0;
+  font-family: "Poppins", sans-serif;
+  z-index: 100;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.footer-brand {
+  color: #90c8ff;
+  font-weight: 600;
+}

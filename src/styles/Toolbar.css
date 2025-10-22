@@ -1,0 +1,79 @@
+/* === Toolbar general === */
+.toolbar-container {
+  background-color: #0f172a; /* azul oscuro elegante */
+  color: #f8fafc; /* texto casi blanco */
+  padding: 16px;
+  border-radius: 10px;
+  width: 200px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  font-family: 'Inter', sans-serif;
+}
+
+/* Título principal */
+.toolbar-container h6 {
+  margin-bottom: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #93c5fd; /* azul claro */
+}
+
+/* Nombre del grupo */
+.toolbar-group-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8; /* gris azulado */
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* === Botones === */
+.toolbar-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.toolbar-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 4px;
+  font-size: 11px;
+  line-height: 1.2;
+  min-height: 50px;
+  font-weight: 500;
+  border-radius: 6px;
+  border: 1px solid #334155;
+  background: #1e293b; /* azul más claro */
+  color: #e2e8f0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.toolbar-button:hover {
+  background: #2563eb; /* azul fuerte */
+  border-color: #2563eb;
+  color: white;
+  transform: translateY(-1px);
+}
+
+.toolbar-button.active {
+  background: #3b82f6; /* azul activo */
+  border: 2px solid #60a5fa;
+  color: white;
+  font-weight: 600;
+}
+
+/* Ícono */
+.toolbar-button span:first-child {
+  font-size: 18px;
+  margin-bottom: 2px;
+}
+
+/* Etiqueta */
+.toolbar-button span:last-child {
+  font-size: 9px;
+  opacity: 0.85;
+}

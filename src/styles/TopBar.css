@@ -1,0 +1,63 @@
+/* === TopBar.css === */
+
+/* Apply to both login and no-login bars */
+.navbar {
+  transition: background-color 0.3s ease;
+  padding-top: 1rem !important;   /* increased padding */
+  padding-bottom: 1rem !important; /* makes bar taller */
+  min-height: 70px;               /* ensures consistent height */
+}
+
+body {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.fixed-top {
+  top: 0 !important;
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+
+.navbar-nav .nav-link {
+  color: #ffffff !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: 6px;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* Hover effect: darker blue-grey background */
+.navbar-nav .nav-link:hover {
+  background-color: #1f2a3b !important; /* darker shade */
+  color: #e5e9f0 !important;
+}
+
+/* Active link (optional, for highlighting current page) */
+.navbar-nav .nav-link.active {
+  background-color: #3f4e6b !important;
+  color: #ffffff !important;
+  font-weight: 600;
+}
+
+.navbar .dropdown-toggle::after {
+  display: none !important;
+}
+
+/* Dropdown styling */
+.dropdown-menu {
+  
+  background-color: #2f3b52 !important;
+  border: none;
+  border-radius: 8px;
+}
+
+.dropdown-item {
+  color: #ffffff !important;
+  transition: background-color 0.25s ease;
+}
+
+.dropdown-item:hover {
+  background-color: #1f2a3b !important;
+  color: #e5e9f0 !important;
+}
