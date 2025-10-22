@@ -108,7 +108,10 @@ export function Canvas({
         width={stageSize.width}
         height={stageSize.height}
         onWheel={onWheel}
-        onMouseDown={onPointerDown}
+        onMouseDown={(e) => {
+          console.log('🎯 STAGE CLICKED!', { tool, target: e.target.name() });
+          onPointerDown(e);
+        }}
         onMouseMove={tool !== "comment" ? onPointerMove : undefined}
         onMouseUp={tool !== "comment" ? onPointerUp : undefined}
         onMouseLeave={(e) => onPointerUp(e as KonvaEventObject<any>)}

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
 
@@ -7,16 +7,22 @@ import { useLayers } from "../hooks/useLayers";
 import { useShapes } from "../hooks/useShapes";
 import { useDrawing } from "../hooks/useDrawing";
 import { useComments } from "../hooks/useComments";
+import { useCanvasSync } from "../hooks/useCanvasSync";
 
 import { Canvas } from "./whiteboard/Canvas";
 import { RightSidebar } from "./whiteboard/RightSidebar";
 import Toolbar from "./whiteboard/Toolbar";
 import PropertiesPanel from "./PropertiesPanel";
 
-import { ToolOption } from "../types/types";
-import { getUserMongoId } from "../utils/UserMongoId";
+import { ToolOption } from "../types/whiteboard";
+import { CanvasApiService } from "../services/canvasApi";
 
-export default function WhiteboardApp(): React.ReactElement {
+interface WhiteboardAppProps {
+  userId: string;
+  dashboardId: string;
+}
+
+export default function WhiteboardApp({ userId, dashboardId }: WhiteboardAppProps): React.ReactElement {
   const canvasWrapperRef = useRef<HTMLDivElement | null>(null);
   const stageRef = useRef<Konva.Stage | null>(null);
 
@@ -27,9 +33,6 @@ export default function WhiteboardApp(): React.ReactElement {
   const [opacity, setOpacity] = useState<number>(1);
   const [stageSize, setStageSize] = useState({ width: 1000, height: 700 });
 
-  const USER_ID = getUserMongoId();
-  const DASHBOARD_ID = "507f1f77bcf86cd799439011";
-
   const {
     comments,
     createTemporaryComment,
@@ -38,7 +41,7 @@ export default function WhiteboardApp(): React.ReactElement {
     updateComment,
     deleteComment,
     updateCommentPosition,
-  } = useComments({ dashboardId: DASHBOARD_ID, userId: USER_ID });
+  } = useComments({ dashboardId, userId });
 
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editingCommentText, setEditingCommentText] = useState<string>("");
@@ -47,6 +50,103 @@ export default function WhiteboardApp(): React.ReactElement {
   const { layers, currentLayer, setCurrentLayer, addLayer, removeLayer, toggleLayerVisibility, toggleLayerLock, setLayers } = useLayers(setShapes);
   const { camera, handleWheel, resetCamera, screenToWorld, handlePanStart } = useCamera(tool, stageSize, stageRef);
   const drawing = useDrawing({ tool, currentLayer, color, fillColor, size, opacity, setShapes, screenToWorld });
+
+  const loadCanvas = useCallback(async () => {
+    if (!dashboardId) return;
+  
+    const maxRetries = 5;
+    const retryDelay = 1000;
+  
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        console.log(`Cargando canvas (intento ${i + 1}/${maxRetries}): ${dashboardId}`);
+        const { layers: loadedLayers, shapes: loadedShapes } = await CanvasApiService.getCanvas(dashboardId);
+  
+        if (loadedLayers.length === 0 && loadedShapes.length === 0) {
+          console.log("Canvas nuevo o vacío. Inicializando con una capa por defecto.");
+          const initialLayer = { id: `layer-${Date.now()}`, name: "Capa 1", visible: true, locked: false };
+          setLayers([initialLayer]);
+          setShapes([]);
+          setCurrentLayer(initialLayer.id);
+        } else {
+          setLayers(loadedLayers);
+          setShapes(loadedShapes);
+          setCurrentLayer(loadedLayers[0].id);
+        }
+        console.log("Canvas cargado exitosamente.");
+        return;
+      } catch (error: any) {
+        if (error.response?.status === 404 && i < maxRetries - 1) {
+          console.warn(`Canvas no encontrado, reintentando en ${retryDelay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
+        } else {
+          console.error("Error definitivo al cargar el canvas:", error);
+          return; 
+        }
+      }
+    }
+  }, [dashboardId, setLayers, setShapes, setCurrentLayer]);
+
+  useEffect(() => {
+    loadCanvas();
+  }, [loadCanvas]);
+
+  useCanvasSync({ dashboardId, shapes, onSync: loadCanvas, isEnabled: true });
+
+  const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Función de guardado principal
+  const handleSaveCanvas = useCallback(async () => {
+      console.log("🔍 Debug save attempt:", { 
+        shapesCount: shapes.length, 
+        dashboardId, 
+        userId,
+        layersCount: layers.length
+      });
+      
+      const visibleLayerIds = new Set(layers.filter((l) => l.visible).map((l) => l.id));
+      const visibleShapes = shapes.filter((shape) => visibleLayerIds.has(shape.layerId));
+  
+      if (visibleShapes.length === 0 || !dashboardId || !userId) {
+        console.log("❌ No hay figuras para guardar o falta dashboardId/userId.", {
+          visibleShapesCount: visibleShapes.length,
+          hasDashboardId: !!dashboardId,
+          hasUserId: !!userId
+        });
+        return;
+      }
+  
+      console.log("💾 Auto-guardando canvas...");
+      try {
+        const response = await CanvasApiService.saveCanvas({
+          dashboardId,
+          userId,
+          layers,
+          shapes: visibleShapes,
+        });
+  
+        console.log("✅ Canvas guardado exitosamente:", response);
+      } catch (error) {
+        console.error("❌ Error al guardar el canvas:", error);
+      }
+    }, [dashboardId, userId, layers, shapes]);
+
+  const debouncedSave = useCallback(() => {
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
+    }
+    saveTimerRef.current = setTimeout(() => {
+      handleSaveCanvas();
+    }, 500);
+  }, [handleSaveCanvas]); 
+
+  useEffect(() => {
+    return () => {
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+      }
+    };
+  }, []);
 
   const handleMoveLayer = (id: string, direction: "up" | "down") => {
     setLayers((prev) => {
@@ -76,7 +176,6 @@ export default function WhiteboardApp(): React.ReactElement {
     if (!pointer) return;
 
     if (tool === "comment") {
-      // 🔹 Corrige coordenadas del comentario
       const { x, y } = screenToWorld(pointer.x, pointer.y);
       const tempComment = createTemporaryComment(x, y);
       setEditingCommentId(tempComment.id);
@@ -104,7 +203,10 @@ export default function WhiteboardApp(): React.ReactElement {
   };
 
   const handlePointerUp = () => {
-    if (drawing.isDrawing.current) drawing.stopDrawing();
+    if (drawing.isDrawing.current) {
+      drawing.stopDrawing();
+      debouncedSave();
+    }
   };
 
   const handleShapeClick = (e: KonvaEventObject<MouseEvent>, id: string) => {
@@ -126,6 +228,10 @@ export default function WhiteboardApp(): React.ReactElement {
     window.addEventListener("resize", measure);
     return () => window.removeEventListener("resize", measure);
   }, []);
+
+  useEffect(() => {
+    debouncedSave();
+  }, [shapes, layers, debouncedSave]);
 
   return (
     <div

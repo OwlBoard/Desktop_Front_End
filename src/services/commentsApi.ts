@@ -1,11 +1,13 @@
 // src/services/commentsApi.ts
 import { CommentDef } from '../types/types';
+import { getUserMongoId, generateMongoIdFromUserId, getDashboardMongoId } from '../utils/UserMongoId';
 
 const API_BASE_URL = 'http://localhost:8001/comments';
 
 export interface CreateCommentRequest {
   content: string;
   coordinates: string; // formato "x,y"
+  user_name?: string; // Optional username to display
 }
 
 // Basado en el schema CommentOut del Swagger
@@ -14,6 +16,7 @@ export interface CommentResponse {
   id?: string;   // Optional porque puede venir como '_id'
   dashboard_id: string;
   user_id: string;
+  user_name?: string;  // Username from backend
   content: string;
   coordinates: number[];
   created_at: string;
@@ -32,9 +35,19 @@ export class CommentsApiService {
     userId: string, 
     commentData: CreateCommentRequest
   ): Promise<CommentResponse> {
-    console.log('Creando comentario:', { dashboardId, userId, commentData });
+    // Convert SQL IDs to MongoDB ObjectIds
+    const dashboardMongoId = getDashboardMongoId(dashboardId);
+    const userMongoId = generateMongoIdFromUserId(userId);
     
-    const url = `${API_BASE_URL}/dashboards/${dashboardId}/users/${userId}/comments`;
+    console.log('Creando comentario:', { 
+      dashboardId, 
+      dashboardMongoId,
+      userId, 
+      userMongoId,
+      commentData 
+    });
+    
+    const url = `${API_BASE_URL}/dashboards/${dashboardMongoId}/users/${userMongoId}/comments`;
     console.log('URL:', url);
     
     const response = await fetch(url, {
@@ -45,7 +58,8 @@ export class CommentsApiService {
       },
       body: JSON.stringify({
         content: commentData.content,
-        coordinates: commentData.coordinates
+        coordinates: commentData.coordinates,
+        user_name: commentData.user_name  // Send username to backend
       }),
     });
 
@@ -70,8 +84,11 @@ export class CommentsApiService {
 
   // Obtener todos los comentarios de un tablero
   static async getCommentsByDashboard(dashboardId: string): Promise<CommentResponse[]> {
-    console.log('Fetching comments for dashboard:', dashboardId);
-    const url = `${API_BASE_URL}/dashboards/${dashboardId}`;
+    // Convert SQL ID to MongoDB ObjectId
+    const dashboardMongoId = getDashboardMongoId(dashboardId);
+    
+    console.log('Fetching comments for dashboard:', dashboardId, '(Mongo ID:', dashboardMongoId, ')');
+    const url = `${API_BASE_URL}/dashboards/${dashboardMongoId}`;
     
     const response = await fetch(url, {
       headers: {
@@ -142,7 +159,7 @@ export class CommentsApiService {
       y: backendComment.coordinates[1],
       text: backendComment.content,
       user: {
-        name: "Usuario" // Por ahora placeholder, después integrar con user service
+        name: backendComment.user_name || "Usuario"  // Use username from backend, fallback to "Usuario"
       },
       // Añadimos campos adicionales para tracking
       backendId: commentId,
@@ -157,7 +174,8 @@ export class CommentsApiService {
   static convertToBackendComment(frontendComment: CommentDef): CreateCommentRequest {
     return {
       content: frontendComment.text,
-      coordinates: `${frontendComment.x},${frontendComment.y}`
+      coordinates: `${frontendComment.x},${frontendComment.y}`,
+      user_name: frontendComment.user?.name  // Include username
     };
   }
 

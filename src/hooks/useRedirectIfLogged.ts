@@ -1,11 +1,16 @@
 // src/hooks/useRedirectIfLogged.ts
+"use client";
+
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 
 export const useRedirectIfLogged = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
+  
   useEffect(() => {
-    const userId = localStorage.getItem("userId");
-    if (userId) navigate(`/profile/${userId}`);
-  }, [navigate]);
+    const userId = localStorage.getItem("user_id");
+    if (userId) {
+      router.push(`/profile/${userId}`);
+    }
+  }, [router]);
 };

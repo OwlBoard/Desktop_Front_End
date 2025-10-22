@@ -1,6 +1,8 @@
+"use client";
+
 import React from 'react';
 import { Navbar, Nav, Container } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import "../styles/TopBar.css";
 
 const TopBarNoLogin: React.FC = () => {
@@ -17,7 +19,7 @@ const TopBarNoLogin: React.FC = () => {
       <Container fluid>
         <Navbar.Brand
           as={Link}
-          to="/"
+          href="/"
           style={{ color: '#ffffff', fontWeight: 700, fontSize: '1.5rem' }}
         >
           🦉 Owlboard
@@ -25,13 +27,13 @@ const TopBarNoLogin: React.FC = () => {
         <Navbar.Toggle aria-controls="navbar-nav" />
         <Navbar.Collapse id="navbar-nav" className="justify-content-end">
           <Nav>
-            <Nav.Link as={Link} to="/" style={{ color: '#ffffff' }}>
+            <Nav.Link as={Link} href="/" style={{ color: '#ffffff' }}>
               Home
             </Nav.Link>
-            <Nav.Link as={Link} to="/login" style={{ color: '#ffffff' }}>
+            <Nav.Link as={Link} href="/login" style={{ color: '#ffffff' }}>
               Login
             </Nav.Link>
-            <Nav.Link as={Link} to="/register" style={{ color: '#ffffff' }}>
+            <Nav.Link as={Link} href="/register" style={{ color: '#ffffff' }}>
               Register
             </Nav.Link>
           </Nav>

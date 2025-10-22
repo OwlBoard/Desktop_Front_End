@@ -6,6 +6,13 @@ export interface AuthResponse {
   jwt?: string;
   id?: number;
   user_id?: number;
+  name?: string;
+  username?: string;
+  user?: {
+    id?: number;
+    name?: string;
+    username?: string;
+  };
   data?: {
     token?: string;
     access_token?: string;

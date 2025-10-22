@@ -37,5 +37,5 @@ export const useLayers = (setShapes: React.Dispatch<React.SetStateAction<ShapeDe
     );
   };
 
-  return { layers, currentLayer, setCurrentLayer, addLayer, removeLayer, toggleLayerVisibility, toggleLayerLock };
+  return { layers, currentLayer, setCurrentLayer, addLayer, removeLayer, toggleLayerVisibility, toggleLayerLock, setLayers };
 };

@@ -1,27 +1,36 @@
+"use client";
+
 // src/components/TopBarLogin.tsx
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Navbar, Nav, Container, NavDropdown } from "react-bootstrap";
-import { Link, useNavigate } from "react-router-dom";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FaUserCircle } from "react-icons/fa";
 import "../styles/TopBarLogin.css";
 
-const TopBarLogin: React.FC = () => {
+interface TopBarLoginProps {
+  userName?: string;
+}
+
+const TopBarLogin: React.FC<TopBarLoginProps> = ({ userName = "User" }) => {
   const [expanded, setExpanded] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [userName, setUserName] = useState<string>("");
-  const navigate = useNavigate();
+  const [userId, setUserId] = useState<string | null>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setUserId(localStorage.getItem("user_id"));
+    }
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("user_id");
     localStorage.removeItem("user_name");
+    localStorage.removeItem("user_email");
     localStorage.removeItem("token");
-    navigate("/");
+    router.push("/");
   };
-
-  useEffect(() => {
-    const storedName = localStorage.getItem("user_name");
-    if (storedName) setUserName(storedName);
-  }, []);
 
   return (
     <Navbar
@@ -36,7 +45,7 @@ const TopBarLogin: React.FC = () => {
       <Container fluid>
         <Navbar.Brand
           as={Link}
-          to="/"
+          href="/"
           style={{ color: "#ffffff", fontWeight: 700, fontSize: "1.5rem" }}
         >
           🦉 Owlboard
@@ -49,14 +58,17 @@ const TopBarLogin: React.FC = () => {
 
         <Navbar.Collapse id="navbar-nav" className="justify-content-end">
           <Nav>
-            <Nav.Link as={Link} to="/" style={{ color: "#ffffff" }}>
+            <Nav.Link as={Link} href="/" style={{ color: "#ffffff" }}>
               Home
             </Nav.Link>
-            <Nav.Link as={Link} to="/dashboards" style={{ color: "#ffffff" }}>
-              Dashboards
+            <Nav.Link as={Link} href="/my-boards" style={{ color: "#ffffff" }}>
+              My Boards
             </Nav.Link>
-            <Nav.Link as={Link} to="/join" style={{ color: "#ffffff" }}>
-              Join a Board
+            <Nav.Link as={Link} href="/board" style={{ color: "#ffffff" }}>
+              New Board
+            </Nav.Link>
+            <Nav.Link as={Link} href="/paint" style={{ color: "#ffffff" }}>
+              Paint
             </Nav.Link>
 
             <NavDropdown
@@ -80,11 +92,11 @@ const TopBarLogin: React.FC = () => {
               onMouseLeave={() => setDropdownOpen(false)}
               className="no-caret"
             >
-              <NavDropdown.Item as={Link} to={`/profile/${localStorage.getItem("user_id")}`}>
+              <NavDropdown.Item as={Link} href={`/profile/${userId}`}>
                 View Profile
               </NavDropdown.Item>
-              <NavDropdown.Item as={Link} to={`/edit-profile/${localStorage.getItem("user_id")}`}>
-                Edit Profile
+              <NavDropdown.Item as={Link} href={`/user/${userId}/dashboards`}>
+                My Dashboards
               </NavDropdown.Item>
               <NavDropdown.Divider />
               <NavDropdown.Item onClick={handleLogout}>

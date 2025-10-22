@@ -61,6 +61,7 @@ export interface PolygonShape extends BaseShape {
   type: "polygon";
   sides: number;
   radius: number;
+  points: number[];
 }
 
 export interface PathShape extends BaseShape {

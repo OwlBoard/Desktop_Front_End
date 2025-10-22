@@ -38,6 +38,13 @@ const CommentNode: React.FC<CommentNodeProps> = ({
 
   const handleToggle = () => setIsOpen((prev) => !prev);
   const isEditing = editingCommentId === comment.id;
+  
+  // Check if current user is the comment owner
+  const currentUserId = typeof window !== 'undefined' ? localStorage.getItem('user_id') : null;
+  const isOwner = currentUserId && comment.userId && 
+    (comment.userId === currentUserId || 
+     // Also check against MongoDB ID
+     comment.userId === [...currentUserId].map((c) => c.charCodeAt(0).toString(16).padStart(2, '0')).join('').repeat(Math.ceil(24 / (currentUserId.length * 2))).slice(0, 24));
 
   return (
     <Group
@@ -155,40 +162,47 @@ const CommentNode: React.FC<CommentNodeProps> = ({
                 </>
               ) : (
                 <>
-                  <p style={{ fontSize: "14px", margin: "4px 0" }}>
+                  <p style={{ fontSize: "14px", margin: "4px 0", color: "#000000" }}>
                     {comment.text || "(Sin contenido)"}
                   </p>
-                  <div style={{ display: "flex", justifyContent: "space-between" }}>
-                    <button
-                      style={{
-                        background: "#3b82f6",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "4px",
-                        padding: "4px 8px",
-                        cursor: "pointer",
-                      }}
-                      onClick={() => {
-                        setEditingCommentId?.(comment.id);
-                        setEditingCommentText?.(comment.text);
-                      }}
-                    >
-                      ✏️ Editar
-                    </button>
-                    <button
-                      style={{
-                        background: "#ef4444",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "4px",
-                        padding: "4px 8px",
-                        cursor: "pointer",
-                      }}
-                      onClick={() => deleteComment?.(comment.id)}
-                    >
-                      🗑️ Borrar
-                    </button>
-                  </div>
+                  {isOwner && (
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <button
+                        style={{
+                          background: "#3b82f6",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "4px",
+                          padding: "4px 8px",
+                          cursor: "pointer",
+                        }}
+                        onClick={() => {
+                          setEditingCommentId?.(comment.id);
+                          setEditingCommentText?.(comment.text);
+                        }}
+                      >
+                        ✏️ Editar
+                      </button>
+                      <button
+                        style={{
+                          background: "#ef4444",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "4px",
+                          padding: "4px 8px",
+                          cursor: "pointer",
+                        }}
+                        onClick={() => deleteComment?.(comment.id)}
+                      >
+                        🗑️ Borrar
+                      </button>
+                    </div>
+                  )}
+                  {!isOwner && (
+                    <p style={{ fontSize: "12px", color: "#6b7280", marginTop: "8px", fontStyle: "italic" }}>
+                      Solo el autor puede editar este comentario
+                    </p>
+                  )}
                 </>
               )}
             </div>
