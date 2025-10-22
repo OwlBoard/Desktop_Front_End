@@ -3,19 +3,29 @@ import { Container, Row, Col, Button } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import TopBarNoLogin from "../components/TopBarNoLogin";
 import TopBarLogin from "../components/TopBarLogin";
+import { getLocalStorage } from "../utils/localStorage";
 import "../styles/HomePage.css";
 import horseImg from "../styles/images/horse.png";
 import catImg from "../styles/images/cat.gif";
 import landscapeImg from "../styles/images/landscape.gif";
 
 const HomePage: React.FC = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("user_id"));
-  const [userName, setUserName] = useState(localStorage.getItem("user_name") || "Invitado");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userName, setUserName] = useState("Invitado");
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
+      // Initialize from localStorage on client-side
+      const userIdStored = getLocalStorage("user_id");
+      const userNameStored = getLocalStorage("user_name");
+      setUserId(userIdStored);
+      setIsLoggedIn(!!userIdStored);
+      setUserName(userNameStored || "Invitado");
+
       const handleStorageChange = () => {
-        const userId = localStorage.getItem("user_id");
-        const userNameStored = localStorage.getItem("user_name");
+        const userId = getLocalStorage("user_id");
+        const userNameStored = getLocalStorage("user_name");
+        setUserId(userId);
         setIsLoggedIn(!!userId);
         setUserName(userNameStored || "Invitado");
       };
@@ -51,7 +61,7 @@ const HomePage: React.FC = () => {
           <p>Tu pizarra colaborativa para equipos creativos y educativos.</p>
           <div className="mt-4">
             {isLoggedIn ? (
-              <Link to={`/users/${localStorage.getItem("user_id")}/dashboards`}>
+              <Link to={`/users/${userId}/dashboards`}>
                 <Button variant="light" size="lg" className="m-2">
                   Create a board
                 </Button>

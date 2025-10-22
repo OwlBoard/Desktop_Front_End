@@ -46,7 +46,7 @@ export const useShapes = () => {
   };
 
   const deleteSelectedShapes = () => {
-    if (confirm('Delete selected objects?')) {
+    if (window.confirm('Delete selected objects?')) {
       setShapes(prev => prev.filter(s => !selectedIds.includes(s.id)));
       setSelectedIds([]);
     }

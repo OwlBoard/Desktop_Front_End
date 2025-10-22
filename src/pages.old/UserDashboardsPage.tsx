@@ -4,6 +4,7 @@ import { useParams } from "react-router-dom";
 import TopBarLogin from "../components/TopBarLogin";
 import TopBarNoLogin from "../components/TopBarNoLogin";
 import FooterBar from "../components/FooterBar";
+import { getLocalStorage } from "../utils/localStorage";
 import "../styles/UserDashboardsPage.css";
 
 interface Dashboard {
@@ -22,7 +23,7 @@ const DashboardsPage = () => {
   const [creating, setCreating] = useState(false);
   const { userId: routeUserId } = useParams<{ userId: string }>();
 
-  const loggedInUserId = localStorage.getItem("user_id");
+  const loggedInUserId = getLocalStorage("user_id");
   const isLoggedIn = !!loggedInUserId;
   
   // Check if the logged-in user is viewing their own dashboards

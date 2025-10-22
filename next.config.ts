@@ -1,8 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Enable standalone output for Docker
+  // Disable static generation - use server rendering
   output: 'standalone',
+  
+  // Transpile these ESM packages
+  transpilePackages: ['konva', 'react-konva', 'react-konva-utils'],
   
   // Configure image optimization
   images: {
@@ -32,6 +35,11 @@ const nextConfig: NextConfig = {
   webpack: (config, { isServer }) => {
     // Reduce webpack logging
     config.stats = 'errors-warnings';
+    
+    // Fix for react-konva and konva ESM modules
+    if (isServer) {
+      config.externals = [...(config.externals || []), 'canvas', 'konva', 'react-konva', 'react-konva-utils'];
+    }
     
     // Optimize chunks for faster builds
     if (!isServer) {
