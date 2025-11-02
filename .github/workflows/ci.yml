@@ -1,0 +1,50 @@
+# This name will appear in the "Actions" tab of your GitHub repository.
+name: TypeScript CI/CD Pipeline
+
+# Triggers for the workflow (same as the backend).
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ "main" ]
+
+# Define the job.
+jobs:
+  build-and-test:
+    # Use the standard Ubuntu runner.
+    runs-on: ubuntu-latest
+
+    # Sequence of tasks.
+    steps:
+      # Step 1: Check out your repository code.
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Step 2: Set up the Node.js environment. LTS versions are recommended.
+      - name: Set up Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm' # Caches npm packages to speed up subsequent runs
+
+      # Step 3: Install project dependencies.
+      # "npm ci" is recommended for CI as it's faster and safer than "npm install".
+      - name: Install Dependencies
+        run: npm ci
+
+      # Step 4: Lint the code.
+      # This assumes you have a "lint" script in your package.json file.
+      - name: Lint with ESLint
+        run: npm run lint
+
+      # Step 5: Run tests.
+      # This assumes you have a "test" script in your package.json file.
+      - name: Test with Jest/Vitest
+        run: npm test
+
+      # Step 6: Create a production build.
+      # This compiles your TypeScript/React/Vue code into static files.
+      # Assumes a "build" script in package.json.
+      - name: Build Application
+        if: success() # Only run if tests pass
+        run: npm run build
