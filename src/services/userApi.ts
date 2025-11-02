@@ -1,8 +1,10 @@
 // src/services/userApi.ts
 import axios from 'axios';
+import { AuthResponse } from '../types/AuthResponse';
 
-// Base URL for User Service - use environment variable or default to Docker port
-const USER_API_BASE_URL = process.env.REACT_APP_USER_SERVICE_URL || 'http://localhost:8000';
+// ✅ Base URL for User Service - matches your FastAPI backend at port 5000
+const USER_API_BASE_URL =
+  process.env.REACT_APP_USER_SERVICE_URL || 'http://localhost:5000';
 
 // Configure axios instance
 const userApiClient = axios.create({
@@ -23,11 +25,6 @@ export interface RegisterRequest {
   email: string;
   password: string;
   full_name?: string;
-}
-
-export interface AuthResponse {
-  message: string;
-  id: number;
 }
 
 export interface UserOut {
@@ -51,8 +48,7 @@ export interface UserUpdateRequest {
 
 // API Service Class
 export class UserApiService {
-  
-  // User Registration
+  // ✅ User Registration
   static async register(userData: RegisterRequest): Promise<AuthResponse> {
     const formData = new URLSearchParams();
     formData.append('email', userData.email);
@@ -61,35 +57,35 @@ export class UserApiService {
       formData.append('full_name', userData.full_name);
     }
 
-    const response = await userApiClient.post<AuthResponse>('/users/register', formData);
+    const response = await userApiClient.post<AuthResponse>('users/register', formData);
     return response.data;
   }
 
-  // User Login
+  // ✅ User Login (Form fields)
   static async login(credentials: LoginRequest): Promise<AuthResponse> {
     const formData = new URLSearchParams();
     formData.append('email', credentials.email);
     formData.append('password', credentials.password);
 
-    const response = await userApiClient.post<AuthResponse>('/users/login', formData);
+    const response = await userApiClient.post<AuthResponse>('users/login', formData);
     return response.data;
   }
 
   // Get all users
   static async getAllUsers(): Promise<UserOut[]> {
-    const response = await userApiClient.get<UserOut[]>('/');
+    const response = await userApiClient.get<UserOut[]>('users');
     return response.data;
   }
 
   // Get user by ID
   static async getUserById(userId: number): Promise<UserOut> {
-    const response = await userApiClient.get<UserOut>(`/${userId}`);
+    const response = await userApiClient.get<UserOut>(`users/${userId}`);
     return response.data;
   }
 
   // Update user
   static async updateUser(userId: number, updateData: UserUpdateRequest): Promise<UserOut> {
-    const response = await userApiClient.put<UserOut>(`/${userId}`, updateData, {
+    const response = await userApiClient.put<UserOut>(`users/${userId}`, updateData, {
       headers: {
         'Content-Type': 'application/json',
       },
@@ -99,12 +95,12 @@ export class UserApiService {
 
   // Delete user (soft delete by default)
   static async deleteUser(userId: number, hard: boolean = false): Promise<void> {
-    await userApiClient.delete(`/${userId}?hard=${hard}`);
+    await userApiClient.delete(`users/${userId}?hard=${hard}`);
   }
 
   // Get user dashboards
   static async getUserDashboards(userId: number): Promise<DashboardOut[]> {
-    const response = await userApiClient.get<DashboardOut[]>(`/${userId}/dashboards`);
+    const response = await userApiClient.get<DashboardOut[]>(`users/${userId}/dashboards`);
     return response.data;
   }
 }

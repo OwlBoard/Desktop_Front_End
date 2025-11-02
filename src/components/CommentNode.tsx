@@ -1,48 +1,216 @@
-// src/components/CommentNode.tsx
-import React from 'react';
-import { Group, Circle, Text } from 'react-konva';
-import type { CommentDef } from '../types/types';
+import React, { useState } from "react";
+import { Group, Circle, Label, Tag, Text } from "react-konva";
+import { KonvaEventObject } from "konva/lib/Node";
+import { Html } from "react-konva-utils";
+import { CommentDef } from "../types/types";
 
 interface CommentNodeProps {
   comment: CommentDef;
-  onDblClick: () => void;
-  onDragMove: (e: any) => void; // <-- AÑADIR
-  onDragEnd: (e: any) => void;  // <-- AÑADIR
+  onDblClick?: () => void;
+  onDragMove?: (e: KonvaEventObject<DragEvent>) => void;
+  onDragEnd?: (e: KonvaEventObject<DragEvent>) => void;
+  editing?: boolean;
+  saveTemporaryComment?: (id: string, text: string) => Promise<any>;
+  cancelTemporaryComment?: (id: string) => void;
+  updateComment?: (id: string, text: string) => Promise<any>;
+  deleteComment?: (id: string) => Promise<any>;
+  editingCommentId?: string | null;
+  editingCommentText?: string;
+  setEditingCommentId?: (id: string | null) => void;
+  setEditingCommentText?: (text: string) => void;
 }
 
-const COMMENT_ICON = '💬';
-const COMMENT_RADIUS = 4;
+const CommentNode: React.FC<CommentNodeProps> = ({
+  comment,
+  onDblClick,
+  onDragMove,
+  onDragEnd,
+  editingCommentId,
+  editingCommentText,
+  setEditingCommentId,
+  setEditingCommentText,
+  saveTemporaryComment,
+  cancelTemporaryComment,
+  updateComment,
+  deleteComment,
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
 
-export default function CommentNode({ comment, onDblClick, onDragMove, onDragEnd }: CommentNodeProps) {
+  const handleToggle = () => setIsOpen((prev) => !prev);
+  const isEditing = editingCommentId === comment.id;
+  
+  // Check if current user is the comment owner
+  const currentUserId = typeof window !== 'undefined' ? localStorage.getItem('user_id') : null;
+  const isOwner = currentUserId && comment.userId && 
+    (comment.userId === currentUserId || 
+     // Also check against MongoDB ID
+     comment.userId === [...currentUserId].map((c) => c.charCodeAt(0).toString(16).padStart(2, '0')).join('').repeat(Math.ceil(24 / (currentUserId.length * 2))).slice(0, 24));
+
   return (
-    <Group 
-        x={comment.x} 
-        y={comment.y} 
-        onDblClick={onDblClick} 
-        onTap={onDblClick} 
-        draggable // <-- draggable ya debería estar, pero asegúrate
-        onDragMove={onDragMove} // <-- AÑADIR
-        onDragEnd={onDragEnd}   // <-- AÑADIR
+    <Group
+      x={comment.x}
+      y={comment.y}
+      draggable
+      onDblClick={onDblClick}
+      onDragMove={onDragMove}
+      onDragEnd={onDragEnd}
     >
-      {/* Circle background for better visibility */}
+      {/* 🔵 Pin del comentario */}
       <Circle
-        radius={COMMENT_RADIUS}
-        fill="#FFD700"
-        stroke="#E5A700"
+        radius={8}
+        fill="#3b82f6"
+        stroke="white"
         strokeWidth={2}
-        shadowColor="black"
-        shadowBlur={5}
-        shadowOpacity={0.3}
+        onClick={handleToggle}
+        shadowColor="rgba(0,0,0,0.25)"
+        shadowBlur={3}
+        shadowOffsetY={2}
       />
-      {/* Emoji icon */}
-      <Text
-        text={COMMENT_ICON}
-        fontSize={20}
-        x={-COMMENT_RADIUS / 2 - 2}
-        y={-COMMENT_RADIUS / 2 - 2}
-        align="center"
-        verticalAlign="middle"
-      />
+
+      {/* 💬 Caja de comentario (solo si está abierta) */}
+      {isOpen && (
+        <>
+          <Label y={15}>
+            <Tag fill="white" stroke="#3b82f6" cornerRadius={6} shadowBlur={4} />
+            <Text
+              text={`${comment.user?.name || "Anónimo"}:`}
+              fontSize={14}
+              fill="#1e3a8a"
+              padding={5}
+            />
+          </Label>
+
+          {/* Caja HTML editable */}
+          <Html
+            divProps={{
+              style: {
+                position: "absolute",
+                top: `${comment.y + 35}px`,
+                left: `${comment.x + 20}px`,
+                transform: "translate(-50%, 0)",
+                zIndex: 10,
+              },
+            }}
+          >
+            <div
+              style={{
+                background: "white",
+                border: "1px solid #3b82f6",
+                borderRadius: "8px",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                padding: "8px",
+                width: "220px",
+              }}
+            >
+              {isEditing ? (
+                <>
+                  <textarea
+                    style={{
+                      width: "100%",
+                      height: "60px",
+                      resize: "none",
+                      border: "1px solid #d1d5db",
+                      borderRadius: "4px",
+                      padding: "4px",
+                      fontSize: "14px",
+                      fontFamily: "Inter, sans-serif",
+                    }}
+                    value={editingCommentText || ""}
+                    onChange={(e) => setEditingCommentText?.(e.target.value)}
+                    autoFocus
+                  />
+                  <div style={{ marginTop: "6px", display: "flex", justifyContent: "space-between" }}>
+                    <button
+                      style={{
+                        background: "#3b82f6",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "4px",
+                        padding: "4px 8px",
+                        cursor: "pointer",
+                      }}
+                      onClick={async () => {
+                        if (comment.id.startsWith("temp-")) {
+                          await saveTemporaryComment?.(comment.id, editingCommentText || "");
+                        } else {
+                          await updateComment?.(comment.id, editingCommentText || "");
+                        }
+                        setEditingCommentId?.(null);
+                      }}
+                    >
+                      💾 Guardar
+                    </button>
+                    <button
+                      style={{
+                        background: "#e5e7eb",
+                        border: "none",
+                        borderRadius: "4px",
+                        padding: "4px 8px",
+                        cursor: "pointer",
+                      }}
+                      onClick={() => {
+                        if (comment.id.startsWith("temp-")) {
+                          cancelTemporaryComment?.(comment.id);
+                        }
+                        setEditingCommentId?.(null);
+                        setIsOpen(false);
+                      }}
+                    >
+                      ❌ Cancelar
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p style={{ fontSize: "14px", margin: "4px 0", color: "#000000" }}>
+                    {comment.text || "(Sin contenido)"}
+                  </p>
+                  {isOwner && (
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <button
+                        style={{
+                          background: "#3b82f6",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "4px",
+                          padding: "4px 8px",
+                          cursor: "pointer",
+                        }}
+                        onClick={() => {
+                          setEditingCommentId?.(comment.id);
+                          setEditingCommentText?.(comment.text);
+                        }}
+                      >
+                        ✏️ Editar
+                      </button>
+                      <button
+                        style={{
+                          background: "#ef4444",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "4px",
+                          padding: "4px 8px",
+                          cursor: "pointer",
+                        }}
+                        onClick={() => deleteComment?.(comment.id)}
+                      >
+                        🗑️ Borrar
+                      </button>
+                    </div>
+                  )}
+                  {!isOwner && (
+                    <p style={{ fontSize: "12px", color: "#6b7280", marginTop: "8px", fontStyle: "italic" }}>
+                      Solo el autor puede editar este comentario
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
+          </Html>
+        </>
+      )}
     </Group>
   );
-}
+};
+
+export default CommentNode;
