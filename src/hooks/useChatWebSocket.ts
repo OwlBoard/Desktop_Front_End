@@ -44,7 +44,9 @@ export function useChatWebSocket({
 
     const loadHistory = async () => {
       try {
-        const response = await fetch(`/api/chat/messages/${dashboardId}?limit=50`);
+        const apiProtocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+        const apiBase = `${apiProtocol}//localhost:8000/api`;
+        const response = await fetch(`${apiBase}/chat/messages/${dashboardId}?limit=50`);
         if (response.ok) {
           const data = await response.json();
           // Map backend messages (with 'content') to frontend format (with 'message')
@@ -201,7 +203,9 @@ export function useChatWebSocket({
 
     const fetchConnectedUsers = async () => {
       try {
-        const response = await fetch(`/api/chat/users/${dashboardId}`);
+        const apiProtocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+        const apiBase = `${apiProtocol}//localhost:8000/api`;
+        const response = await fetch(`${apiBase}/chat/users/${dashboardId}`);
         if (response.ok) {
           const data = await response.json();
           setConnectedUsers(data.users || []);
@@ -251,7 +255,8 @@ export function useChatWebSocket({
       wsRef.current.send(JSON.stringify({
         type: 'chat_message',
         data: {
-          message: message.trim()
+          content: message.trim(),
+          message_type: 'text'
         }
       }));
       return true;
