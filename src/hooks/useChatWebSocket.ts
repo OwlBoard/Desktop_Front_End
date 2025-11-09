@@ -76,7 +76,7 @@ export function useChatWebSocket({
       try {
         // Determine WebSocket URL (ws:// for http://, wss:// for https://)
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = `${protocol}//localhost:8002/chat/ws/${dashboardId}?user_id=${userId}&username=${encodeURIComponent(username)}`;
+        const wsUrl = `${protocol}//localhost:8000/api/chat/ws/${dashboardId}?user_id=${userId}&username=${encodeURIComponent(username)}`;
         
         console.log('Connecting to WebSocket:', wsUrl);
         const ws = new WebSocket(wsUrl);

@@ -2,7 +2,7 @@
 import { CommentDef } from '../types/types';
 import { getUserMongoId, generateMongoIdFromUserId, getDashboardMongoId } from '../utils/UserMongoId';
 
-const API_BASE_URL = 'http://localhost:8001/comments';
+const API_BASE_URL = 'http://localhost:8000/api/comments';
 
 export interface CreateCommentRequest {
   content: string;

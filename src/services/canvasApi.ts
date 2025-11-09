@@ -1,7 +1,7 @@
 import axios from "axios";
 import { Layer, ShapeDef } from "../types/whiteboard";
 
-const CANVAS_API_URL = "http://localhost:8080";
+const CANVAS_API_URL = "http://localhost:8000/api";
 
 const apiClient = axios.create({
   baseURL: CANVAS_API_URL,
