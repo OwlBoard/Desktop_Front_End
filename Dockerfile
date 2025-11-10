@@ -20,11 +20,25 @@ COPY next.config.ts tsconfig.json ./
 COPY public ./public
 COPY src ./src
 
+# Accept build args for NEXT_PUBLIC_* environment variables
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_USER_SERVICE_URL
+ARG NEXT_PUBLIC_COMMENTS_SERVICE_URL
+ARG NEXT_PUBLIC_CHAT_SERVICE_URL
+ARG NEXT_PUBLIC_CANVAS_SERVICE_URL
+
 # Set environment variables for build
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 # Skip type checking and linting (already configured in next.config.ts)
 ENV SKIP_ENV_VALIDATION=1
+
+# Pass NEXT_PUBLIC_* vars to the build (baked into static bundle)
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+ENV NEXT_PUBLIC_USER_SERVICE_URL=${NEXT_PUBLIC_USER_SERVICE_URL}
+ENV NEXT_PUBLIC_COMMENTS_SERVICE_URL=${NEXT_PUBLIC_COMMENTS_SERVICE_URL}
+ENV NEXT_PUBLIC_CHAT_SERVICE_URL=${NEXT_PUBLIC_CHAT_SERVICE_URL}
+ENV NEXT_PUBLIC_CANVAS_SERVICE_URL=${NEXT_PUBLIC_CANVAS_SERVICE_URL}
 
 # Build Next.js application
 RUN npm run build
@@ -36,6 +50,10 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Install ca-certificates package to enable custom CA trust
+# Install su-exec to drop privileges in entrypoint script
+RUN apk add --no-cache ca-certificates su-exec
+
 # Create a non-root user
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
@@ -45,15 +63,24 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
-# Set correct permissions
+# Copy entrypoint script
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# The CA certificate will be mounted via docker-compose volume
+# and will be automatically trusted when update-ca-certificates runs
+# Note: This is handled at container startup via the entrypoint script
+
+# Set correct permissions (but keep entrypoint as root for ca-certificates update)
 RUN chown -R nextjs:nodejs /app
 
-USER nextjs
+# Note: We don't switch to nextjs user here - the entrypoint script will do it
+# after updating CA certificates (which requires root)
 
 EXPOSE 3000
 
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Start Next.js server
-CMD ["node", "server.js"]
+# Start Next.js server via entrypoint script (runs as root, then drops to nextjs user)
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]

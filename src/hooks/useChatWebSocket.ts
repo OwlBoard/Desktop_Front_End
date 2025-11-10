@@ -2,9 +2,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
 // Get API base URL from environment
+// For client-side requests, use relative URLs to go through Next.js API routes
+// which handle the proxying to the backend services
 const CHAT_API_BASE = process.env.REACT_APP_CHAT_SERVICE_URL || 
                       process.env.NEXT_PUBLIC_CHAT_SERVICE_URL || 
-                      'https://localhost:8443/api';
+                      '/api';
 
 interface ChatMessage {
   id: string;

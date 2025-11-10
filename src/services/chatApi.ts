@@ -23,7 +23,8 @@ export interface ConnectedUser {
   connected_at: string;
 }
 
-const CHAT_API_BASE = process.env.REACT_APP_CHAT_SERVICE_URL || 'https://localhost:8443/api';
+// Use relative URLs for client-side requests to go through Next.js API routes
+const CHAT_API_BASE = process.env.REACT_APP_CHAT_SERVICE_URL || '/api';
 
 class ChatApiService {
   private ws: WebSocket | null = null;
