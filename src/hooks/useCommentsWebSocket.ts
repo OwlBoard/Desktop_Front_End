@@ -33,7 +33,7 @@ export const useCommentsWebSocket = ({
     const dashboardMongoId = getDashboardMongoId(dashboardId);
     
     // Connect to Comments Service WebSocket
-    const wsUrl = `ws://localhost:8000/api/comments/ws/dashboards/${dashboardMongoId}/comments`;
+    const wsUrl = `wss://localhost:8443/api/comments/ws/dashboards/${dashboardMongoId}/comments`;
     
     console.log('[Comments WS] Connecting to:', wsUrl);
     

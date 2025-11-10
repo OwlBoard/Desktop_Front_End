@@ -23,7 +23,7 @@ export interface ConnectedUser {
   connected_at: string;
 }
 
-const CHAT_API_BASE = 'http://localhost:8000/api';
+const CHAT_API_BASE = process.env.REACT_APP_CHAT_SERVICE_URL || 'https://localhost:8443/api';
 
 class ChatApiService {
   private ws: WebSocket | null = null;
@@ -84,7 +84,8 @@ class ChatApiService {
       this.ws.close();
     }
 
-    const wsUrl = `ws://localhost:8000/api/chat/ws/${dashboardId}?user_id=${userId}&username=${encodeURIComponent(username)}`;
+    // Use wss:// for secure WebSocket connection (matching HTTPS)
+    const wsUrl = `wss://localhost:8443/api/chat/ws/${dashboardId}?user_id=${userId}&username=${encodeURIComponent(username)}`;
     this.ws = new WebSocket(wsUrl);
 
     this.ws.onopen = () => {

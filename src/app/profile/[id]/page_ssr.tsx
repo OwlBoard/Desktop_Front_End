@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import ProfileClient from './ProfileClient';
 
-const USER_SERVICE_URL = process.env.USER_SERVICE_URL || 'http://localhost:8000/api';
+const USER_SERVICE_URL = process.env.USER_SERVICE_URL || 'https://localhost:8443/api';
 
 async function getUserData(userId: string) {
   try {

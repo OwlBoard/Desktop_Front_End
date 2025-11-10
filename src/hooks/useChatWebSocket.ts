@@ -1,6 +1,11 @@
 // WebSocket hook for real-time chat
 import { useState, useEffect, useRef, useCallback } from 'react';
 
+// Get API base URL from environment
+const CHAT_API_BASE = process.env.REACT_APP_CHAT_SERVICE_URL || 
+                      process.env.NEXT_PUBLIC_CHAT_SERVICE_URL || 
+                      'https://localhost:8443/api';
+
 interface ChatMessage {
   id: string;
   user_id: string;
@@ -44,7 +49,7 @@ export function useChatWebSocket({
 
     const loadHistory = async () => {
       try {
-        const response = await fetch(`/api/chat/messages/${dashboardId}?limit=50`);
+        const response = await fetch(`${CHAT_API_BASE}/chat/messages/${dashboardId}?limit=50`);
         if (response.ok) {
           const data = await response.json();
           // Map backend messages (with 'content') to frontend format (with 'message')
@@ -74,9 +79,9 @@ export function useChatWebSocket({
 
     const connectWebSocket = () => {
       try {
-        // Determine WebSocket URL (ws:// for http://, wss:// for https://)
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = `${protocol}//localhost:8000/api/chat/ws/${dashboardId}?user_id=${userId}&username=${encodeURIComponent(username)}`;
+        // Use wss:// for secure WebSocket connection (matching HTTPS on port 8443)
+        const protocol = 'wss:';
+        const wsUrl = `${protocol}//localhost:8443/api/chat/ws/${dashboardId}?user_id=${userId}&username=${encodeURIComponent(username)}`;
         
         console.log('Connecting to WebSocket:', wsUrl);
         const ws = new WebSocket(wsUrl);
@@ -201,7 +206,7 @@ export function useChatWebSocket({
 
     const fetchConnectedUsers = async () => {
       try {
-        const response = await fetch(`/api/chat/users/${dashboardId}`);
+        const response = await fetch(`${CHAT_API_BASE}/chat/users/${dashboardId}`);
         if (response.ok) {
           const data = await response.json();
           setConnectedUsers(data.users || []);
