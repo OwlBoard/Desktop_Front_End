@@ -1,12 +1,10 @@
 // WebSocket hook for real-time chat
 import { useState, useEffect, useRef, useCallback } from 'react';
 
-// Get API base URL from environment
-// For client-side requests, use relative URLs to go through Next.js API routes
-// which handle the proxying to the backend services
-const CHAT_API_BASE = process.env.REACT_APP_CHAT_SERVICE_URL || 
-                      process.env.NEXT_PUBLIC_CHAT_SERVICE_URL || 
-                      '/api';
+// Get API base URL from environment - Use API Gateway
+const CHAT_API_BASE = process.env.NEXT_PUBLIC_API_URL ||
+                      process.env.REACT_APP_CHAT_SERVICE_URL || 
+                      'http://localhost:8000/api';
 
 interface ChatMessage {
   id: string;
@@ -81,9 +79,10 @@ export function useChatWebSocket({
 
     const connectWebSocket = () => {
       try {
-        // Use wss:// for secure WebSocket connection (matching HTTPS on port 8443)
-        const protocol = 'wss:';
-        const wsUrl = `${protocol}//localhost:8443/api/chat/ws/${dashboardId}?user_id=${userId}&username=${encodeURIComponent(username)}`;
+        // Use ws:// for WebSocket connection through API Gateway
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsHost = process.env.NEXT_PUBLIC_API_URL?.replace('http://', '').replace('https://', '').split('/')[0] || 'localhost:8000';
+        const wsUrl = `${protocol}//${wsHost}/api/chat/ws/${dashboardId}?user_id=${userId}&username=${encodeURIComponent(username)}`;
         
         console.log('Connecting to WebSocket:', wsUrl);
         const ws = new WebSocket(wsUrl);

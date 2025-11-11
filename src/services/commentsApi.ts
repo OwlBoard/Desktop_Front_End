@@ -2,7 +2,10 @@
 import { CommentDef } from '../types/types';
 import { getUserMongoId, generateMongoIdFromUserId, getDashboardMongoId } from '../utils/UserMongoId';
 
-const API_BASE_URL = process.env.REACT_APP_COMMENTS_SERVICE_URL || 'https://localhost:8443/api/comments';
+const API_BASE_URL = 
+  process.env.NEXT_PUBLIC_COMMENTS_SERVICE_URL || 
+  process.env.REACT_APP_COMMENTS_SERVICE_URL || 
+  'http://localhost:8000/api/comments';
 
 export interface CreateCommentRequest {
   content: string;

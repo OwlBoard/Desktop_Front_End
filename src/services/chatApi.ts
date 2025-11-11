@@ -23,8 +23,10 @@ export interface ConnectedUser {
   connected_at: string;
 }
 
-// Use relative URLs for client-side requests to go through Next.js API routes
-const CHAT_API_BASE = process.env.REACT_APP_CHAT_SERVICE_URL || '/api';
+// Use API Gateway for client-side requests
+const CHAT_API_BASE = process.env.NEXT_PUBLIC_API_URL || 
+                      process.env.REACT_APP_CHAT_SERVICE_URL || 
+                      'http://localhost:8000/api';
 
 class ChatApiService {
   private ws: WebSocket | null = null;
@@ -85,8 +87,10 @@ class ChatApiService {
       this.ws.close();
     }
 
-    // Use wss:// for secure WebSocket connection (matching HTTPS)
-    const wsUrl = `wss://localhost:8443/api/chat/ws/${dashboardId}?user_id=${userId}&username=${encodeURIComponent(username)}`;
+    // Use ws:// for WebSocket connection through API Gateway
+    const protocol = typeof window !== 'undefined' && window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsHost = process.env.NEXT_PUBLIC_API_URL?.replace('http://', '').replace('https://', '').split('/')[0] || 'localhost:8000';
+    const wsUrl = `${protocol}//${wsHost}/api/chat/ws/${dashboardId}?user_id=${userId}&username=${encodeURIComponent(username)}`;
     this.ws = new WebSocket(wsUrl);
 
     this.ws.onopen = () => {

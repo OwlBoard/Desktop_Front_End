@@ -4,7 +4,9 @@ import { AuthResponse } from '../types/AuthResponse';
 
 // ✅ Base URL for User Service - Use API Gateway for proper CORS handling
 const USER_API_BASE_URL =
-  process.env.REACT_APP_USER_SERVICE_URL || 'https://localhost:8443/api';
+  process.env.NEXT_PUBLIC_API_URL || 
+  process.env.REACT_APP_USER_SERVICE_URL || 
+  'http://localhost:8000/api';
 
 // Configure axios instance
 const userApiClient = axios.create({
