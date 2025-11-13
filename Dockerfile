@@ -63,24 +63,16 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
-# Copy entrypoint script
-COPY docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
-
-# The CA certificate will be mounted via docker-compose volume
-# and will be automatically trusted when update-ca-certificates runs
-# Note: This is handled at container startup via the entrypoint script
-
-# Set correct permissions (but keep entrypoint as root for ca-certificates update)
+# Set correct permissions
 RUN chown -R nextjs:nodejs /app
 
-# Note: We don't switch to nextjs user here - the entrypoint script will do it
-# after updating CA certificates (which requires root)
+# Switch to non-root user
+USER nextjs
 
 EXPOSE 3000
 
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Start Next.js server via entrypoint script (runs as root, then drops to nextjs user)
-ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+# Start Next.js server directly
+CMD ["node", "server.js"]
